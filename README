@@ -1,0 +1,32 @@
+-Modules
+
+  -Color recognition
+    -Generate random RGB values
+    -Show color
+    -Pair triple with one or more of these:
+      -Red, orange, yellow, green, blue, violet, pink, cyan
+      -Black, white, gray, brown, tan
+    -Partition 0-255 into blocks
+    -Build decision tree
+
+  -Space definitions
+    -left, right, top, bottom, corner, upper, lower, center, middle
+    -Also relative space (next to, left/right, above/below, on top/beneath)
+
+  -Image generation
+    -Pick a color for the background
+    -Add a shape with a color different from the background (or more)
+      -Triangle, quadrilateral, pentagon, hexagon, octagon
+    -If I send you pixel coordinates, give me control to move the polygon
+
+  -Analyze scene
+    -Separate polygons = clusters of edge pixels = connected components
+    -For each polygon:
+      -Determine number of sides
+      -Find color
+      -Identify location
+
+  -Interface: ask questions or assert predicates (later, modify image)
+    -Parse input sentence
+    -Convert parse tree into search algorithm
+    -Return algo(collection of descriptors)
