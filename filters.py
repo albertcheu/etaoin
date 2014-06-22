@@ -59,7 +59,9 @@ def left(a,b): return a[POLY].cx < b[POLY].minX
 def right(a,b): return a[POLY].cx > b[POLY].maxX
 
 def satEnumP(enumTree, rel, relApp):
-    #Given the tree for ENUMSING/PLUR, a list of shapeDescs that a noun phrase should be <relative to>, and the number of them that are, see of the number matches what the enum specifies
+    #Given the tree for ENUMSING/PLUR, a list of shapeDescs (rel) that a noun phrase should be <relative to>, and the number of them that are (relApp), see if the number matches what the enum specifies
+    #i.e. "one X above", "all X are to the right"
+    #rel = X, relApp = no. of X that satisfy a relRule (above, to the right)
     if not enumTree: return relApp > 0
     if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
 
@@ -76,9 +78,11 @@ def filterByPP(ppTree, winnowed, shapeDescList):
     #shapeDescList must be the whole/original listing of objects
 
     def filterByP1(tree, winnowed):
+        #Simple case: global location (at the top of the screen, for example)
         ans = []
         loc = searchTree(tree, 'GLOBALLOC')[0].leaves()
         for shapeDesc in winnowed:
+            #Find all instances within winnowed whose self-description matches
             poly = shapeDesc[POLY]
             w = poly.whereAmI()
             if sameDesc(loc, w): ans.append(shapeDesc)
@@ -102,14 +106,17 @@ def filterByPP(ppTree, winnowed, shapeDescList):
 
         #Go thru each entry and compare against rel's ENUM
         for shapeDesc,relApp in d.items():
-            if satEnum(enumTree,rel,relApp): sans.add(shapeDesc)
+            if satEnumP(enumTree,rel,relApp): sans.add(shapeDesc)
             pass
         pass
 
     def filterByPPS(ppsTree, winnowed, shapeDescList):
+        #PPS -> P1 | P2
+        
         #Relative location
         if treeHas(ppsTree, 'P2'):
             p2Tree = searchTree(ppsTree, 'P2')[0]
+            #Determine the relRule
             if treeHas(p2Tree, 'ADJACENT'): relRule = adj
             else:
                 if treeHas(p2Tree, 'HORIZ'):
@@ -118,7 +125,6 @@ def filterByPP(ppTree, winnowed, shapeDescList):
                 elif p2Tree.leaves()[-1][0] == 'b': relRule = below
                 else: relRule = above
                 pass
-
             sans = set()
             #Handle case when we are relative to a plural phrase
             for npplur1 in searchTree(ppsTree,'NPPLUR1'):
@@ -128,7 +134,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
                 pass
             #Handle case when we are relative to a singular phrase
             #Not mutex with the earlier case
-            #(i.e., above triangles and a green figure)
+            #(i.e., above [triangles and a green figure])
             for npsing in searchTree(ppsTree, 'NPSINGSEC'):
                 cn = searchTree(npsing, 'NPSINGTERT')[0].leaves()
                 foo(ppsTree, npsing, 'ENUMSING',

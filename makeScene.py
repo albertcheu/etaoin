@@ -55,7 +55,7 @@ def makeScene(backColor, shapeDescList):
     im.save("scene.png")
 
     #Show scene
-    #call(["gnome-open","scene.png"])
+    call(["gnome-open","scene.png"])
 
     pass
 
