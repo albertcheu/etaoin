@@ -5,7 +5,7 @@ from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
 from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS
-from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas
+from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas, handleClose
 
 def respond(output):
     print "Etta:", str(output)
@@ -75,7 +75,7 @@ def handleCount(tree, words, shapeDescList):
     if treeHas(tree, 'CQ1'):
         cq = searchTree(tree, 'CQ1')[0]
         if treeHas(cq, 'PP'): filtered = filterByPP(cq, filtered, shapeDescList)
-        elif treeHas(cq, 'CLOSE'): print "Can't do 'close to one another' yet"
+        elif treeHas(cq, 'CLOSE'): filtered = handleClose(filtered)
         elif treeHas(cq, 'C'):
             f = []
             for shapeDesc in filtered:

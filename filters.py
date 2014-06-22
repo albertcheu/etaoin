@@ -60,7 +60,7 @@ def right(a,b): return a[POLY].cx > b[POLY].maxX
 
 def satEnumP(enumTree, rel, relApp):
     #Given the tree for ENUMSING/PLUR, a list of shapeDescs (rel) that a noun phrase should be <relative to>, and the number of them that are (relApp), see if the number matches what the enum specifies
-    #i.e. "one X above", "all X are to the right"
+    #i.e. "above one X", "to the right of all X"
     #rel = X, relApp = no. of X that satisfy a relRule (above, to the right)
     if not enumTree: return relApp > 0
     if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
@@ -170,6 +170,39 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         pass
 
     return ans
+
+def handleClose(winnowed):
+    #Treat pairs of figures that satisfy "next to" as edges
+    #Find connected components larger than one
+    def explore(winnowed, adjList, node, unvisited, cc):
+        unvisited.remove(node)
+        cc.append(winnowed[node])
+        for neigh in adjList[node]:
+            if neigh in unvisited:
+                explore(adjList, neigh, unvisited)
+                pass
+            pass
+        return
+
+    n = len(winnowed)
+    unvisited, adjList = set(), {}
+    for i in range(n):
+        unvisited.add(i)
+        for j in range(n):
+            adjList[i] = []
+            if i != j and adj(winnowed[i],winnowed[j]): adjList[i].append(j)
+            pass
+        pass
+
+    filtered = []
+    while len(unvisited):
+        cc = []
+        node = sample(unvisited,1)[0]
+        explore(winnowed, adjList, node, unvisited, cc)
+        if len(cc) > 1: filtered += cc
+        pass
+
+    return filtered
 
 def filterByNPSING(tree, winnowed, shapeDescList):
     #Iterate through shapeDescList and find the matching shape(s)
