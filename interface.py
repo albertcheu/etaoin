@@ -132,8 +132,26 @@ def handleCount(tree, words, shapeDescList):
 
     pass
 
+def handleBool(tree, words, shapeDescList):
+    if treeHas(tree, 'BOOLSING'):
+        #Singular
+        if treeHas(tree, 'THING'):
+            filtered = filterByPP(tree, shapeDescList, shapeDescList)
+            respond("Yes" if len(filtered) else "No, nothing")
+            pass
+        else:
+            npsing = searchTree(tree, 'NPSING')[0]
+            filtered = filterByNPSING(npsing, shapeDescList, shapeDescList)
+
+            pass
+        pass
+    else:
+        #Plural
+        pass
+    pass
+
 def handleQuestion(tree, words, shapeDescList):
-    if treeHas(tree, 'BOOLQ'): respond("Can't do bool questions yet, hold on.")
+    if treeHas(tree, 'BOOLQ'): handlebool(tree, words, shapeDescList)
     elif treeHas(tree, 'COUNTQ'): handleCount(tree, words, shapeDescList)
     else: handleFetch(tree, words, shapeDescList)
     pass
