@@ -136,13 +136,16 @@ def handleCount(tree, words, shapeDescList):
 
     pass
 
-def oneOrMore(winnowed, test):
+def countTrue(winnowed, test):
+    ans = 0
     for shapeDesc in winnowed:
-        if test(shapeDesc): return True
-    return False
+        if test(shapeDesc): ans += 1
+    return ans
+def oneOrMore(winnowed, test): return countTrue(winnowed, test) >= 1
+def applyAll(winnowed, test): return countTrue(winnowed, test) == len(winnowed)
+def checkEnum(winnowed, test, n):return countTrue(winnowed, test) == n
 
 def checkThe(npsing, winnowed):
-    print npsing.leaves()
     if npsing.leaves()[0] == 'the':
         if len(winnowed) > 1:
             respond("Be more specific or more general")
@@ -153,73 +156,93 @@ def checkThe(npsing, winnowed):
         pass
     return True
 
-def handleBoolSing(tree, words, shapeDescList):
+def handleBool(tree, words, shapeDescList, sing):
     if treeHas(tree, 'THING'):
         #Is there something PP?
         filtered = filterByPP(tree, shapeDescList, shapeDescList)
         respond("Yes" if len(filtered) else "No, nothing")
         pass
     else:
-        npsing = searchTree(tree, 'NPSING')[0]
-        filtered = filterByNPSING(npsing, shapeDescList, shapeDescList)
-        if 'does' in words:
-            if not checkThe(npsing, filtered): return
+        nphrase = searchTree(tree, 'NPSING' if sing else 'NPPLUR')[0]
+        if sing: filtered = filterByNPSING(nphrase, shapeDescList,shapeDescList)
+        else: filtered = filterByNPPLUR(nphrase, shapeDescList, shapeDescList)
+        if treeHas(nphrase, 'NUM'):
+            n = SNUM[searchTree(tree,'NUM')[0].leaves()[0]]
+        else: n = None
+
+        if 'does' in words or 'do' in words:
+            if sing and not checkThe(nphrase, filtered): return
             if 'sides' in words:
                 #does X have N sides?
                 snum = searchTree(tree, 'NUM')[0].leaves()[0]
                 matchSides = lambda sD: sD[N] == SNUM[snum]
                 respond("Yes" if oneOrMore(filtered,matchSides) else "No")
                 pass
-            else:
-                #does X have the same color as NP?
+            elif treeHas(tree, 'NP'):
+                #do(es) X have the same color as NP? (X -> filtered)
                 np = searchTree(tree, 'NP')[0]
                 if np[0].node == 'NPSING': otherFiltered = filterByNPSING(np[0], shapeDescList, shapeDescList)
                 else: otherFiltered = filterByNPPLUR(np[0], shapeDescList, shapeDescList)
                 histList = colorHistogram(otherFiltered).keys()
                 if len(histList) > 1:
-                    respond("They don't have the same color to begin with")
+                    np_words = " ".join(np[0].leaves())
+                    respond(np_words+" don't have the same color to begin with")
                     pass
                 else:
                     col = histList[0]
                     matchColor = lambda x: x[C] == col
-                    respond("Yes" if oneOrMore(filtered, matchColor) else "No")
+                    singTest = oneOrMore(filtered,matchColor)
+                    if n: plurTest = checkEnum(filtered,matchColor,n)
+                    else: plurTest = applyAll(filtered,matchColor)
+                    respond("Yes" if (sing and singTest) or plurTest else "No")
                     pass
+                pass
+            else:
+                #Do X have the same color (as each other)?
+                hist = colorHistogram(filtered)
+                col = hist.keys()[0]
+                plurTest = n == len(filtered) if n else len(filtered)==hist[col]
+                respond("Yes" if plurTest else "No")
                 pass
             pass
         elif 'there' in words:
             #Is there X?
-            #<PP>, is there X?
+            #<PP>, is/are there X?
             if type(tree[0]) != str:
                 filtered = filterByPP(tree[0],filtered,shapeDescList)
                 pass
-            respond("Yes" if len(filtered) else "No")
+            plurTest = len(filtered) if not n else len(filtered) == n
+            respond("Yes" if plurTest else "No")
             pass
         elif tree[1].node == 'C':
-            #Is X <color>?
-            if not checkThe(npsing, filtered): return
+            #Is/are X <color>?
+            if sing and not checkThe(nphrase, filtered): return
             col = words[-1]
-            respond("Yes" if oneOrMore(filtered,lambda sD:sD[C]==col) else "No")
+            if sing: test = oneOrMore(filtered,lambda sD:sD[C]==col)
+            elif n: test = checkEnum(filtered,lambda sD:sD[C]==col, n)
+            else: test = applyAll(filtered,lambda sD:sD[C]==col)
+            respond("Yes" if test else "No")
             pass
         else:
-            #Is X <an instance of Y>?
+            #Is/are X <an instance of Y>?
+            #TO DO
             npsing = searchTree(tree[0], 'NPSING')[0]
             otherFiltered = filterByNPSING(npsing, shapeDescList, shapeDescList)
-            if not checkThe(npsing, otherFiltered): return
-            respond("Yes" if len(set(filtered) & set(otherFiltered)) else "No")
+            if sing and not checkThe(npsing, otherFiltered): return
+            ntrsct = set(filtered) & set(otherFiltered)
+            singTest = len(ntrsct) and not n
+            plurTest = len(ntrsct) == n
+            respond("Yes" if singTest or plurTest else "No")
             pass
-        pass
-    pass
-
-def handleBool(tree, words, shapeDescList):
-    #Singular
-    if treeHas(tree, 'BOOLSING'):handleBoolSing(searchTree(tree, 'BOOLSING')[0], words, shapeDescList)
-    else:
-        #Plural
         pass
     pass
 
 def handleQuestion(tree, words, shapeDescList):
-    if treeHas(tree, 'BOOLQ'): handleBool(tree, words, shapeDescList)
+    if treeHas(tree, 'BOOLQ'):
+        sing = treeHas(tree, 'BOOLSING')
+        subtree = searchTree(tree, 'BOOLSING' if sing else 'BOOLPLUR')[0]
+        handleBool(subtree, words, shapeDescList, sing)
+        
     elif treeHas(tree, 'COUNTQ'): handleCount(tree, words, shapeDescList)
     else: handleFetch(tree, words, shapeDescList)
     pass
