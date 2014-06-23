@@ -4,7 +4,7 @@ from random import choice
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
-from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS
+from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM
 from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas, handleClose
 
 def respond(output):
@@ -67,6 +67,15 @@ def handleFetch(tree, words, shapeDescList):
     respond(response)
     pass
 
+def colorHistogram(winnowed):
+    hist = {}
+    for shapeDesc in winnowed:
+        col = shapeDesc[C]
+        if col not in hist: hist[col] = 1
+        else: hist[col] += 1
+        pass
+    return hist
+
 def handleCount(tree, words, shapeDescList):
     response = ''
     npplur = searchTree(tree, 'NPPLUR')[0]
@@ -91,12 +100,7 @@ def handleCount(tree, words, shapeDescList):
         cq = searchTree(tree, 'CQ2')[0]
         if not treeHas(cq, 'NP'):
             #same color as one another - make a histogram!
-            hist = {}
-            for shapeDesc in filtered:
-                col = shapeDesc[C]
-                if col not in hist: hist[col] = 1
-                else: hist[col] += 1
-                pass
+            hist = colorHistogram(filtered)
             response = ''
             for col in hist:
                 if hist[col] > 1: response += str(hist[col])+' '+col+', '
@@ -132,26 +136,90 @@ def handleCount(tree, words, shapeDescList):
 
     pass
 
-def handleBool(tree, words, shapeDescList):
-    if treeHas(tree, 'BOOLSING'):
-        #Singular
-        if treeHas(tree, 'THING'):
-            filtered = filterByPP(tree, shapeDescList, shapeDescList)
-            respond("Yes" if len(filtered) else "No, nothing")
+def oneOrMore(winnowed, test):
+    for shapeDesc in winnowed:
+        if test(shapeDesc): return True
+    return False
+
+def checkThe(npsing, winnowed):
+    print npsing.leaves()
+    if npsing.leaves()[0] == 'the':
+        if len(winnowed) > 1:
+            respond("Be more specific or more general")
+            return False
+        elif len(winnowed) == 0:
+            respond("That doesn't exist")
+            return False
+        pass
+    return True
+
+def handleBoolSing(tree, words, shapeDescList):
+    if treeHas(tree, 'THING'):
+        #Is there something PP?
+        filtered = filterByPP(tree, shapeDescList, shapeDescList)
+        respond("Yes" if len(filtered) else "No, nothing")
+        pass
+    else:
+        npsing = searchTree(tree, 'NPSING')[0]
+        filtered = filterByNPSING(npsing, shapeDescList, shapeDescList)
+        if 'does' in words:
+            if not checkThe(npsing, filtered): return
+            if 'sides' in words:
+                #does X have N sides?
+                snum = searchTree(tree, 'NUM')[0].leaves()[0]
+                matchSides = lambda sD: sD[N] == SNUM[snum]
+                respond("Yes" if oneOrMore(filtered,matchSides) else "No")
+                pass
+            else:
+                #does X have the same color as NP?
+                np = searchTree(tree, 'NP')[0]
+                if np[0].node == 'NPSING': otherFiltered = filterByNPSING(np[0], shapeDescList, shapeDescList)
+                else: otherFiltered = filterByNPPLUR(np[0], shapeDescList, shapeDescList)
+                histList = colorHistogram(otherFiltered).keys()
+                if len(histList) > 1:
+                    respond("They don't have the same color to begin with")
+                    pass
+                else:
+                    col = histList[0]
+                    matchColor = lambda x: x[C] == col
+                    respond("Yes" if oneOrMore(filtered, matchColor) else "No")
+                    pass
+                pass
+            pass
+        elif 'there' in words:
+            #Is there X?
+            #<PP>, is there X?
+            if type(tree[0]) != str:
+                filtered = filterByPP(tree[0],filtered,shapeDescList)
+                pass
+            respond("Yes" if len(filtered) else "No")
+            pass
+        elif tree[1].node == 'C':
+            #Is X <color>?
+            if not checkThe(npsing, filtered): return
+            col = words[-1]
+            respond("Yes" if oneOrMore(filtered,lambda sD:sD[C]==col) else "No")
             pass
         else:
-            npsing = searchTree(tree, 'NPSING')[0]
-            filtered = filterByNPSING(npsing, shapeDescList, shapeDescList)
-
+            #Is X <an instance of Y>?
+            npsing = searchTree(tree[0], 'NPSING')[0]
+            otherFiltered = filterByNPSING(npsing, shapeDescList, shapeDescList)
+            if not checkThe(npsing, otherFiltered): return
+            respond("Yes" if len(set(filtered) & set(otherFiltered)) else "No")
             pass
         pass
+    pass
+
+def handleBool(tree, words, shapeDescList):
+    #Singular
+    if treeHas(tree, 'BOOLSING'):handleBoolSing(searchTree(tree, 'BOOLSING')[0], words, shapeDescList)
     else:
         #Plural
         pass
     pass
 
 def handleQuestion(tree, words, shapeDescList):
-    if treeHas(tree, 'BOOLQ'): handlebool(tree, words, shapeDescList)
+    if treeHas(tree, 'BOOLQ'): handleBool(tree, words, shapeDescList)
     elif treeHas(tree, 'COUNTQ'): handleCount(tree, words, shapeDescList)
     else: handleFetch(tree, words, shapeDescList)
     pass
