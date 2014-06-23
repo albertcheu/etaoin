@@ -62,7 +62,8 @@ def satEnumP(enumTree, rel, relApp):
     #Given the tree for ENUMSING/PLUR, a list of shapeDescs (rel) that a noun phrase should be <relative to>, and the number of them that are (relApp), see if the number matches what the enum specifies
     #i.e. "above one X", "to the right of all X"
     #rel = X, relApp = no. of X that satisfy a relRule (above, to the right)
-    if not enumTree: return relApp > 0
+    if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
+        return relApp > 0
     if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
 
     enumWords = ' '.join(enumTree.leaves())
@@ -108,6 +109,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         for shapeDesc,relApp in d.items():
             if satEnumP(enumTree,rel,relApp): sans.add(shapeDesc)
             pass
+
         pass
 
     def filterByPPS(ppsTree, winnowed, shapeDescList):

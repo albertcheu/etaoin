@@ -35,6 +35,7 @@ def handleFetch(tree, words, shapeDescList):
         filtered = filterByNPPLUR(tree, shapeDescList, shapeDescList)
         pass
     else:
+        #print tree
         ppTree = searchTree(tree, 'PP')[0]
         filtered = filterByPP(ppTree, shapeDescList, shapeDescList)
         pass
