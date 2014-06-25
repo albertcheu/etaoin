@@ -31,17 +31,16 @@ def colorHistogram(winnowed):
         pass
     return hist
 
-def satEnumP(enumTree, rel, relApp):
-    #Given the tree for ENUMSING/PLUR, a list of shapeDescs (rel) that a noun phrase should be <relative to>, and the number of them that are (relApp), see if the number matches what the enum specifies
-    #i.e. "above one X", "to the right of all X"
-    #rel = X, relApp = no. of X that satisfy a relRule (above, to the right)
+def satEnum(enumTree, winnowed, numSat):
+    #Given the tree for ENUMSING/PLUR, a list of shapeDescs (wubbiwed), and the number of them that satisfy some condition (numSat), see if the number matches what the enum specifies
     if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
-        return relApp > 0
+        return numSat > 0
     if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
 
     enumWords = ' '.join(enumTree.leaves())
     if enumWords in ('all','every','all other','each'):
-        return relApp == len(rel)
-    if 'not' in enumWords: return relApp != len(rel)
-    if enumWords == 'no': return relApp == 0
-    return relApp == 1
+        return numSat == len(winnowed)
+    if 'not' in enumWords: return numSat != len(winnowed)
+    if 'except' in enumWords: return numSat == len(winnowed)-1
+    if enumWords == 'no': return numSat == 0
+    return numSat >= 1

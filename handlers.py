@@ -2,7 +2,7 @@ from random import choice
 
 from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
 from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas, handleClose
-from utility import treeHas, searchTree, respond, colorHistogram
+from utility import treeHas, searchTree, respond, colorHistogram, satEnum
 
 def handleBackground(bgc, tree):
     if treeHas(tree, 'BACKGROUND'):
@@ -16,7 +16,8 @@ def handleBackground(bgc, tree):
     return False
 
 def handleAssertion(tree, words, shapeDescList):
-    respond("Can't do assertions yet, hold on.")
+    #Rephrase the assertion as a boolean question!
+
     pass
 
 def handleFetch(tree, words, shapeDescList):
@@ -126,9 +127,6 @@ def countTrue(winnowed, test):
     for shapeDesc in winnowed:
         if test(shapeDesc): ans += 1
     return ans
-def oneOrMore(winnowed, test): return countTrue(winnowed, test) >= 1
-def applyAll(winnowed, test): return countTrue(winnowed, test) == len(winnowed)
-def checkEnum(winnowed, test, n):return countTrue(winnowed, test) == n
 
 def checkThe(npsing, winnowed):
     if npsing.leaves()[0] == 'the':
@@ -148,12 +146,11 @@ def handleBool(tree, words, shapeDescList, sing):
         respond(YES if len(filtered) else NO)
         pass
     else:
-        nphrase = searchTree(tree, 'NPSING' if sing else 'NPPLUR')[0]
+        label,enumLabel=('NPSING','ENUMSING') if sing else ('NPPLUR','ENUMPLUR')
+        nphrase = searchTree(tree, label)[0]
+        enumTree = searchTree(tree,enumLabel)[0] if treeHas(tree, enumLabel) else None
         if sing: filtered = filterByNPSING(nphrase, shapeDescList,shapeDescList)
         else: filtered = filterByNPPLUR(nphrase, shapeDescList, shapeDescList)
-        if treeHas(nphrase, 'NUM'):
-            n = SNUM[searchTree(tree,'NUM')[0].leaves()[0]]
-        else: n = None
 
         if 'does' in words or 'do' in words:
             if sing and not checkThe(nphrase, filtered): return
@@ -161,7 +158,8 @@ def handleBool(tree, words, shapeDescList, sing):
                 #does X have N sides?
                 snum = searchTree(tree, 'NUM')[0].leaves()[0]
                 matchSides = lambda sD: sD[N] == SNUM[snum]
-                respond(YES if oneOrMore(filtered,matchSides) else NO)
+                numSat = countTrue(filtered,matchSides)
+                respond(YES if satEnum(enumTree, filtered, numSat) else NO)
                 pass
             elif treeHas(tree, 'NP'):
                 #do(es) X have the same color as NP? (X -> filtered)
@@ -176,53 +174,47 @@ def handleBool(tree, words, shapeDescList, sing):
                 else:
                     col = histList[0]
                     matchColor = lambda x: x[C] == col
-                    singTest = oneOrMore(filtered,matchColor)
-                    if n: plurTest = checkEnum(filtered,matchColor,n)
-                    else: plurTest = applyAll(filtered,matchColor)
-                    respond(YES if (sing and singTest) or plurTest else NO)
+                    numSat = countTrue(filtered, matchColor)
+                    respond(YES if satEnum(enumTree, filtered, numSat) else NO)
                     pass
                 pass
             else:
                 #Do X have the same color (as each other)?
                 hist = colorHistogram(filtered)
                 col = hist.keys()[0]
-                plurTest = n == len(filtered) if n else len(filtered)==hist[col]
-                respond(YES if plurTest else NO)
+                numSat = countTrue(filtered, lambda sD: sD[C] == col)
+                respond(YES if satEnum(enumTree, filtered, numSat) else NO)
                 pass
             pass
         elif 'there' in words:
-            #Is there X?
+            #Is/Are there X?
             #<PP>, is/are there X?
             if type(tree[0]) != str:
                 filtered = filterByPP(tree[0],filtered,shapeDescList)
                 pass
-            plurTest = len(filtered) if not n else len(filtered) == n
-            respond(YES if plurTest else NO)
+            respond(YES if len(filtered)  else NO)
             pass
         elif tree[1].node == 'C':
             #Is/are X <color>?
             if sing and not checkThe(nphrase, filtered): return
             col = words[-1]
-            if sing: test = oneOrMore(filtered,lambda sD:sD[C]==col)
-            elif n: test = checkEnum(filtered,lambda sD:sD[C]==col, n)
-            else: test = applyAll(filtered,lambda sD:sD[C]==col)
-            respond(YES if test else NO)
+            numSat = countTrue(filtered, lambda sD:sD[C]==col)
+            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif treeHas(tree, 'UNITE'):
             #Are X close to one another? (i.e. 5 X, all X)
-            newFiltered = handleClose(filtered)
-            test = len(newFiltered)== (n if n else len(filtered))
-            respond(YES if test else NO)
+            numSat = len(handleClose(filtered))
+            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+            pass
+        elif tree[-1].node == 'PP':
+            #i.e. is X at the right? are Y below Z?
+            newFiltered = filterByPP(tree[-1], filtered, shapeDescList)
+            numSat = len(newFiltered)
+            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         else:
-            #Is/are X <an instance of Y>?
-            npsing = searchTree(tree[0], 'NPSING')[0]
-            otherFiltered = filterByNPSING(npsing, shapeDescList, shapeDescList)
-            if sing and not checkThe(npsing, otherFiltered): return
-            ntrsct = set(filtered) & set(otherFiltered)
-            singTest = len(ntrsct) and not n
-            plurTest = len(ntrsct) == n
-            respond(YES if singTest or plurTest else NO)
+            #Is/are X <instance(s) of Y>?
+            respond("TO DO")
             pass
         pass
     pass

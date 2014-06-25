@@ -10,7 +10,7 @@ def parseInput(parser, words, bgc, shapeDescList):
     #try:
     tree = parser.parse(words)
     #print 'Parsed properly'
-    #print tree
+    print tree
     if not handleBackground(bgc, tree):
         if treeHas(tree,'ASSERTION'):handleAssertion(tree, words, shapeDescList)
         else: handleQuestion(tree, words, shapeDescList)

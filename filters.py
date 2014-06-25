@@ -1,7 +1,7 @@
 from random import sample
 from space import sameDesc
 from constants import DUNNO, REASK, GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
-from utility import treeHas, searchTree
+from utility import treeHas, searchTree, satEnum
 
 def filterByCN(cn, shapeDescList):
     #i.e. cn = ['green', 'octagon(s)'] or ['figure(s)']
@@ -73,7 +73,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
 
         #Go thru each entry and compare against rel's ENUM
         for shapeDesc,relApp in d.items():
-            if satEnumP(enumTree,rel,relApp): sans.add(shapeDesc)
+            if satEnum(enumTree,rel,relApp): sans.add(shapeDesc)
             pass
 
         pass
