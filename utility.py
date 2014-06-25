@@ -1,5 +1,5 @@
 from Queue import Queue
-
+from constants import N, SYMM, BASE, C, REGION, POLY, SNUM
 def searchTree(t, label):
     #Find the instances of the label (if nested, choose closest to root)
     q = Queue()
@@ -37,7 +37,7 @@ def satEnum(enumTree, winnowed, numSat):
     #Given the tree for ENUMSING/PLUR, a list of shapeDescs (wubbiwed), and the number of them that satisfy some condition (numSat), see if the number matches what the enum specifies
     if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
         return numSat > 0
-    if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
+    if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]] == numSat
 
     enumWords = ' '.join(enumTree.leaves())
     if enumWords in ('all','every','all other','each'):

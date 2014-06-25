@@ -3,17 +3,23 @@ import sys
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
-from utility import treeHas
+from utility import treeHas, searchFirst
 from handlers import handleBackground, handleAssertion, handleQuestion, respond
 
 def parseInput(parser, words, bgc, shapeDescList):
     #try:
     tree = parser.parse(words)
     #print 'Parsed properly'
-    print tree
+    #print tree
     if not handleBackground(bgc, tree):
-        if treeHas(tree,'ASSERTION'):handleAssertion(tree, words, shapeDescList)
-        else: handleQuestion(tree, words, shapeDescList)
+
+        if treeHas(tree,'ASSERTION'):
+            words = handleAssertion(searchFirst(tree,'ASSERTION'),
+                                    words, shapeDescList)
+            tree = parser.parse(words)
+            pass
+
+        handleQuestion(tree, words, shapeDescList)
         pass
 #except:
     #print sys.exc_info()

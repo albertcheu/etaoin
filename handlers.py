@@ -17,8 +17,26 @@ def handleBackground(bgc, tree):
 
 def handleAssertion(tree, words, shapeDescList):
     #Rephrase the assertion as a boolean question!
+    if treeHas(tree, 'NA'):
+        #X is/are <remainder of sentence>
+        naTree,rem = tree[0],tree[-1]
+        nounPhrase = naTree[0][0]
+        verb = naTree[0][-1]
+        #is/are X <rem>?
+        return [verb] + nounPhrase.leaves() + rem.leaves()
+    elif treeHas(tree, 'NQ'):
+        #there is/are X
+        nqTree = tree[-1]
+        verb, nounPhrase = nqTree[0][0], nqTree[0][-1]
+        #is/are there X?
+        return [verb, 'there'] + nounPhrase.leaves()
+    elif treeHas(tree, 'ASSNCOL'):
+        #X has the same color (as NP/each other)
+        return
 
-    pass
+    #num sides
+
+    return
 
 def handleFetch(tree, words, shapeDescList):
     fqTree = searchFirst(tree, 'FETCHQ')
