@@ -3,7 +3,7 @@ import sys
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
-from filters import treeHas
+from utility import treeHas
 from handlers import handleBackground, handleAssertion, handleQuestion, respond
 
 def parseInput(parser, words, bgc, shapeDescList):

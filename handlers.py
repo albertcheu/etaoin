@@ -2,10 +2,7 @@ from random import choice
 
 from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
 from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas, handleClose
-
-def respond(output):
-    print "Etta:", str(output)
-    return
+from utility import treeHas, searchTree, respond, colorHistogram
 
 def handleBackground(bgc, tree):
     if treeHas(tree, 'BACKGROUND'):
@@ -63,15 +60,6 @@ def handleFetch(tree, words, shapeDescList):
     if len(filtered) == 0: response = DNE
     respond(response)
     pass
-
-def colorHistogram(winnowed):
-    hist = {}
-    for shapeDesc in winnowed:
-        col = shapeDesc[C]
-        if col not in hist: hist[col] = 1
-        else: hist[col] += 1
-        pass
-    return hist
 
 def handleCount(tree, words, shapeDescList):
     response = ''
@@ -220,9 +208,14 @@ def handleBool(tree, words, shapeDescList, sing):
             else: test = applyAll(filtered,lambda sD:sD[C]==col)
             respond(YES if test else NO)
             pass
+        elif treeHas(tree, 'UNITE'):
+            #Are X close to one another? (i.e. 5 X, all X)
+            newFiltered = handleClose(filtered)
+            test = len(newFiltered)== (n if n else len(filtered))
+            respond(YES if test else NO)
+            pass
         else:
             #Is/are X <an instance of Y>?
-            #TO DO
             npsing = searchTree(tree[0], 'NPSING')[0]
             otherFiltered = filterByNPSING(npsing, shapeDescList, shapeDescList)
             if sing and not checkThe(npsing, otherFiltered): return

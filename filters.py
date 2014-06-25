@@ -1,25 +1,7 @@
-from Queue import Queue
-
+from random import sample
 from space import sameDesc
 from constants import DUNNO, REASK, GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
-
-def searchTree(t, label):
-    #Find the instances of the label (if nested, choose closest to root)
-    q = Queue()
-    q.put(t)
-    ans = []
-    while not q.empty():
-        n = q.get()
-        if type(n) != str:
-            if n.node == label: ans.append(n)
-            else:
-                for child in n: q.put(child)
-                pass
-            pass
-        pass
-    return ans
-
-def treeHas(tree, label): return len(searchTree(tree,label)) > 0
+from utility import treeHas, searchTree
 
 def filterByCN(cn, shapeDescList):
     #i.e. cn = ['green', 'octagon(s)'] or ['figure(s)']
@@ -57,22 +39,6 @@ def below(a,b): return a[POLY].cy > b[POLY].maxY
 def above(a,b): return a[POLY].cy < b[POLY].minY
 def left(a,b): return a[POLY].cx < b[POLY].minX
 def right(a,b): return a[POLY].cx > b[POLY].maxX
-
-def satEnumP(enumTree, rel, relApp):
-    #Given the tree for ENUMSING/PLUR, a list of shapeDescs (rel) that a noun phrase should be <relative to>, and the number of them that are (relApp), see if the number matches what the enum specifies
-    #i.e. "above one X", "to the right of all X"
-    #rel = X, relApp = no. of X that satisfy a relRule (above, to the right)
-    if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
-        return relApp > 0
-    if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]]
-
-    enumWords = ' '.join(enumTree.leaves())
-    if enumWords in ('all','every','all other','each'):
-        return relApp == len(rel)
-    if 'not' in enumWords: return relApp != len(rel)
-    if enumWords == 'all but one': return relApp == len(rel)-1
-    if enumWords == 'no': return relApp == 0
-    return relApp == 1
 
 def filterByPP(ppTree, winnowed, shapeDescList):
     #From an already winnowed list, filter using prepositions
@@ -181,7 +147,7 @@ def handleClose(winnowed):
         cc.append(winnowed[node])
         for neigh in adjList[node]:
             if neigh in unvisited:
-                explore(adjList, neigh, unvisited)
+                explore(winnowed, adjList, neigh, unvisited, cc)
                 pass
             pass
         return
@@ -190,8 +156,8 @@ def handleClose(winnowed):
     unvisited, adjList = set(), {}
     for i in range(n):
         unvisited.add(i)
+        adjList[i] = []
         for j in range(n):
-            adjList[i] = []
             if i != j and adj(winnowed[i],winnowed[j]): adjList[i].append(j)
             pass
         pass
