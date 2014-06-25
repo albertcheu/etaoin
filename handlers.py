@@ -1,8 +1,8 @@
 from random import choice
 
 from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
-from filters import filterByNPSING, filterByNPPLUR, filterByPP, searchTree, treeHas, handleClose
-from utility import treeHas, searchTree, respond, colorHistogram, satEnum
+from filters import filterByNPSING, filterByNPPLUR, filterByPP, handleClose
+from utility import treeHas, searchFirst, respond, colorHistogram, satEnum
 
 def handleBackground(bgc, tree):
     if treeHas(tree, 'BACKGROUND'):
@@ -21,7 +21,7 @@ def handleAssertion(tree, words, shapeDescList):
     pass
 
 def handleFetch(tree, words, shapeDescList):
-    fqTree = searchTree(tree, 'FETCHQ')[0]
+    fqTree = searchFirst(tree, 'FETCHQ')
     if treeHas(fqTree, 'FETCHQSING'):
         filtered = filterByNPSING(tree, shapeDescList, shapeDescList)
         pass
@@ -30,7 +30,7 @@ def handleFetch(tree, words, shapeDescList):
         pass
     else:
         #print tree
-        ppTree = searchTree(tree, 'PP')[0]
+        ppTree = searchFirst(tree, 'PP')
         filtered = filterByPP(ppTree, shapeDescList, shapeDescList)
         pass
     #print filtered
@@ -64,17 +64,17 @@ def handleFetch(tree, words, shapeDescList):
 
 def handleCount(tree, words, shapeDescList):
     response = ''
-    npplur = searchTree(tree, 'NPPLUR')[0]
+    npplur = searchFirst(tree, 'NPPLUR')
     filtered = filterByNPPLUR(npplur, shapeDescList, shapeDescList)
     #print filtered
     if treeHas(tree, 'CQ1'):
-        cq = searchTree(tree, 'CQ1')[0]
+        cq = searchFirst(tree, 'CQ1')
         if treeHas(cq, 'PP'): filtered = filterByPP(cq, filtered, shapeDescList)
         elif treeHas(cq, 'CLOSE'): filtered = handleClose(filtered)
         elif treeHas(cq, 'C'):
             f = []
             for shapeDesc in filtered:
-                if shapeDesc[C] in cq.searchTree(cq,'C')[0].leaves():
+                if shapeDesc[C] in searchFirst(cq,'C').leaves():
                     f.append(shapeDesc)
                     pass
                 pass
@@ -83,7 +83,7 @@ def handleCount(tree, words, shapeDescList):
         respond(len(filtered))
         pass
     else:
-        cq = searchTree(tree, 'CQ2')[0]
+        cq = searchFirst(tree, 'CQ2')
         if not treeHas(cq, 'NP'):
             #same color as one another - make a histogram!
             hist = colorHistogram(filtered)
@@ -147,8 +147,8 @@ def handleBool(tree, words, shapeDescList, sing):
         pass
     else:
         label,enumLabel=('NPSING','ENUMSING') if sing else ('NPPLUR','ENUMPLUR')
-        nphrase = searchTree(tree, label)[0]
-        enumTree = searchTree(tree,enumLabel)[0] if treeHas(tree, enumLabel) else None
+        nphrase = searchFirst(tree, label)
+        enumTree = searchFirst(tree,enumLabel) if treeHas(tree, enumLabel) else None
         if sing: filtered = filterByNPSING(nphrase, shapeDescList,shapeDescList)
         else: filtered = filterByNPPLUR(nphrase, shapeDescList, shapeDescList)
 
@@ -156,14 +156,14 @@ def handleBool(tree, words, shapeDescList, sing):
             if sing and not checkThe(nphrase, filtered): return
             if 'sides' in words:
                 #does X have N sides?
-                snum = searchTree(tree, 'NUM')[0].leaves()[0]
+                snum = searchFirst(tree, 'NUM').leaves()[0]
                 matchSides = lambda sD: sD[N] == SNUM[snum]
                 numSat = countTrue(filtered,matchSides)
                 respond(YES if satEnum(enumTree, filtered, numSat) else NO)
                 pass
             elif treeHas(tree, 'NP'):
                 #do(es) X have the same color as NP? (X -> filtered)
-                np = searchTree(tree, 'NP')[0]
+                np = searchFirst(tree, 'NP')
                 if np[0].node == 'NPSING': otherFiltered = filterByNPSING(np[0], shapeDescList, shapeDescList)
                 else: otherFiltered = filterByNPPLUR(np[0], shapeDescList, shapeDescList)
                 histList = colorHistogram(otherFiltered).keys()
@@ -222,7 +222,7 @@ def handleBool(tree, words, shapeDescList, sing):
 def handleQuestion(tree, words, shapeDescList):
     if treeHas(tree, 'BOOLQ'):
         sing = treeHas(tree, 'BOOLSING')
-        subtree = searchTree(tree, 'BOOLSING' if sing else 'BOOLPLUR')[0]
+        subtree = searchFirst(tree, 'BOOLSING' if sing else 'BOOLPLUR')
         handleBool(subtree, words, shapeDescList, sing)
         
     elif treeHas(tree, 'COUNTQ'): handleCount(tree, words, shapeDescList)

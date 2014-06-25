@@ -1,7 +1,7 @@
 from random import sample
 from space import sameDesc
 from constants import DUNNO, REASK, GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
-from utility import treeHas, searchTree, satEnum
+from utility import treeHas, searchTree, searchFirst, satEnum
 
 def filterByCN(cn, shapeDescList):
     #i.e. cn = ['green', 'octagon(s)'] or ['figure(s)']
@@ -47,7 +47,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
     def filterByP1(tree, winnowed):
         #Simple case: global location (at the top of the screen, for example)
         ans = []
-        loc = searchTree(tree, 'GLOBALLOC')[0].leaves()
+        loc = searchFirst(tree, 'GLOBALLOC').leaves()
         for shapeDesc in winnowed:
             #Find all instances within winnowed whose self-description matches
             poly = shapeDesc[POLY]
@@ -67,7 +67,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
 
         #Extract the enum, if any
         if treeHas(nestedTree,label):
-            enumTree = searchTree(nestedTree,label)[0]
+            enumTree = searchFirst(nestedTree,label)
             pass
         else: enumTree = None
 
@@ -83,7 +83,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         
         #Relative location
         if treeHas(ppsTree, 'P2'):
-            p2Tree = searchTree(ppsTree, 'P2')[0]
+            p2Tree = searchFirst(ppsTree, 'P2')
             #Determine the relRule
             if treeHas(p2Tree, 'ADJACENT'): relRule = adj
             else:
@@ -96,7 +96,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
             sans = set()
             #Handle case when we are relative to a plural phrase
             for npplur1 in searchTree(ppsTree,'NPPLUR1'):
-                cn = searchTree(npplur1,'NPPLUR1SEC')[0].leaves()
+                cn = searchFirst(npplur1,'NPPLUR1SEC').leaves()
                 foo(ppsTree, npplur1, 'ENUMPLUR',
                     cn, winnowed, relRule, shapeDescList, sans)
                 pass
@@ -104,7 +104,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
             #Not mutex with the earlier case
             #(i.e., above [triangles and a green figure])
             for npsing in searchTree(ppsTree, 'NPSINGSEC'):
-                cn = searchTree(npsing, 'NPSINGTERT')[0].leaves()
+                cn = searchFirst(npsing, 'NPSINGTERT').leaves()
                 foo(ppsTree, npsing, 'ENUMSING',
                     cn, winnowed, relRule, shapeDescList, sans)
                 pass
@@ -127,7 +127,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         return ans
 
     #First pass
-    ppsTree = searchTree(ppTree, 'PPS')[0]
+    ppsTree = searchFirst(ppTree, 'PPS')
     ans = filterByPPS(ppsTree, winnowed, shapeDescList)
 
     #Recursive pass (possibly more than one preposition)
@@ -174,22 +174,22 @@ def handleClose(winnowed):
 
 def filterByNPSING(tree, winnowed, shapeDescList):
     #Iterate through shapeDescList and find the matching shape(s)
-    nounTree = searchTree(tree, 'NPSING')[0]
+    nounTree = searchFirst(tree, 'NPSING')
     #C N | N
-    nounSingTree = searchTree(tree, 'NPSINGTERT')[0]
+    nounSingTree = searchFirst(tree, 'NPSINGTERT')
     filtered = filterByCN(nounSingTree.leaves(), winnowed)
     if len(filtered) > 1 and treeHas(nounTree, 'PP'):
-        filtered = filterByPP(searchTree(nounTree,'PP')[0],
+        filtered = filterByPP(searchFirst(nounTree,'PP'),
                               filtered,shapeDescList)
         pass
 
     return filtered
 
 def filterByNPPLUR(tree, winnowed, shapeDescList):
-    pluralNounPhrase = searchTree(tree, 'NPPLURSEC')[0]
+    pluralNounPhrase = searchFirst(tree, 'NPPLURSEC')
     #black figures, octagons, yellow pentagons, etc.
     if 'NPPLUR1' in pluralNounPhrase:
-        cn = searchTree(pluralNounPhrase,'NPPLUR1SEC')[0]
+        cn = searchFirst(pluralNounPhrase,'NPPLUR1SEC')
         return filterByCN(cn.leaves(), winnowed)
     #otherwise, X and Y
     sfiltered = set()

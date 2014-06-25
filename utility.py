@@ -16,6 +16,8 @@ def searchTree(t, label):
         pass
     return ans
 
+def searchFirst(t, label): return searchTree(t,label)[0]
+
 def treeHas(tree, label): return len(searchTree(tree,label)) > 0
 
 def respond(output):
