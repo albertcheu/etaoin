@@ -1,6 +1,7 @@
--Modules
+-Ideally, this project will be able to construct representations of scenes of polygons AND abstract shared properties between different scenes (pseudo-Bongard)
 
-  -Color recognition
+-Modules
+  -Color recognition (directory 'color'; run trainingWindow & testingWindow)
     -Generate random RGB values
     -Show color
     -Pair triple with one or more of these:
@@ -9,24 +10,30 @@
     -Partition 0-255 into blocks
     -Build decision tree
 
-  -Space definitions
+  -Space definitions (space.py)
     -left, right, top, bottom, corner, upper, lower, center, middle
-    -Also relative space (next to, left/right, above/below, on top/beneath)
 
-  -Image generation
-    -Pick a color for the background
-    -Add a shape with a color different from the background (or more)
-      -Triangle, quadrilateral, pentagon, hexagon, octagon
-    -If I send you pixel coordinates, give me control to move the polygon
+  -Image generation (makeScene.py, sceneInput; makes scene.png)
+    -The file sceneInput tells what the scene (initially) looks like
+    -It has format:
+      -Background color
+      -number of shapes
+      -Shape color
+      -number of sides
+      -Region of scene (0 is top left, 1 is top-center, ...8 is bottom right)
+    -makeScene uses polygon.py to make the polygons, PIL to make the png
+    -In the future, the user should be able to m 
 
-  -Analyze scene
-    -Separate polygons = clusters of edge pixels = connected components
-    -For each polygon:
-      -Determine number of sides
-      -Find color
-      -Identify location
+  -Querying (makeScene, interface, handlers, filters, utility, constants)
+    -After creating the scene, makeScene presents a terminal interface
+    -The program parses English sentences and provides appropriate responses
+    -constants.py & utility.py hold handy data elements and functions
 
-  -Interface: ask questions or assert predicates (later, modify image)
-    -Parse input sentence
-    -Convert parse tree into search algorithm
-    -Return algo(collection of descriptors)
+  -TO DO
+    -Instead of makeScene providing the interface, have a standalone .py
+      -This means, representation is derived from .png, not from sceneInput
+    -Allow for natural language movement of the polygons
+      -Conflicts with the previous To-do, though, if the rep. is independent of makeScene/sceneInput
+    -Generate TRUE natural language assertions about (the rep. of) the scene
+      -For simplicity, only positive assertions (no use of 'no' or 'not')
+      -In theory, if a true assertion is shared among multiple scenes, we have found a shared property
