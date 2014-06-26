@@ -35,14 +35,32 @@ def colorHistogram(winnowed):
 
 def satEnum(enumTree, winnowed, numSat):
     #Given the tree for ENUMSING/PLUR, a list of shapeDescs (wubbiwed), and the number of them that satisfy some condition (numSat), see if the number matches what the enum specifies
+
     if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
         return numSat > 0
-    if treeHas(enumTree, 'NUM'): return SNUM[enumTree.leaves()[-1]] == numSat
 
-    enumWords = ' '.join(enumTree.leaves())
-    if enumWords in ('all','every','all other','each'):
-        return numSat == len(winnowed)
+    enumWords = enumTree.leaves()
+    #i.e. there are three polygons
+    if treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
+
+    #Except for one/two/.., all X ...
+    if 'except' in enumWords:
+        return numSat == len(winnowed) - SNUM[enumWords[-2]]
+
+    #all other triangles; assumes the subject is singular
+    #Technically wrong but fix later
+    if 'other' in enumWords: return numSat == len(winnowed)-1
+
+    #all/every/each shape(s)
+    if enumWords[0] in ('all','every','each'): return numSat == len(winnowed)
+
+    #Not all
     if 'not' in enumWords: return numSat != len(winnowed)
-    if 'except' in enumWords: return numSat == len(winnowed)-1
-    if enumWords == 'no': return numSat == 0
+
+    #No X are Y
+    if enumWords == ['no']: return numSat == 0
+
+    if enumWords == ['one']: return numSat == 1
+
+    #a/an shape
     return numSat >= 1

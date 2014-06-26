@@ -220,7 +220,7 @@ def handleBool(tree, words, shapeDescList, sing):
             if type(tree[0]) != str:
                 filtered = filterByPP(tree[0],filtered,shapeDescList)
                 pass
-            respond(YES if len(filtered)  else NO)
+            respond(YES if satEnum(enumTree, filtered, len(filtered)) else NO)
             pass
         elif tree[1].node == 'C':
             #Is/are X <color>?

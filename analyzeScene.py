@@ -125,8 +125,8 @@ def describe(edgePixels, swidth, sheight):
     #What kind of polygon?
     kind = DEFNS[len(hull)]
     #Where is the polygon?
-    bb = BoundingBox(hull)
-    location = " ".join(bb.whereAmI(swidth, sheight))
+    bb = BoundingBox(hull, swidth, sheight)
+    location = " ".join(bb.whereAmI())
 
     print "There is a", kind, "at the", location, "of the screen"
     pass
