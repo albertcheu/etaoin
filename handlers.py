@@ -242,7 +242,16 @@ def handleBool(tree, words, shapeDescList, sing):
             pass
         else:
             #Is/are X <instance(s) of Y>?
-            respond("TO DO")
+            if treeHas(tree, 'ISN'):
+                vnLabel,filterFunc,enumLabel='ISN',filterByNPSING,'ENUMSING'
+            else: vnLabel,filterFunc,enumLabel='AREN',filterByNPPLUR,'ENUMPLUR'
+
+            pnphrase = searchFirst(tree, vnLabel)[-1]
+            penumTree = searchFirst(pnphrase, enumLabel)
+            pfiltered = filterFunc(pnphrase, shapeDescList, shapeDescList)
+            numSat = len(filterFunc(nphrase, pfiltered, shapeDescList))
+            respond(YES if satEnum(penumTree, pfiltered, numSat) else NO)
+
             pass
         pass
     pass
