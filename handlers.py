@@ -30,13 +30,23 @@ def handleAssertion(tree, words, shapeDescList):
         verb, nounPhrase = nqTree[0][0], nqTree[0][-1]
         #is/are there X?
         return [verb, 'there'] + nounPhrase.leaves()
-    elif treeHas(tree, 'ASSNCOL'):
+    else:
+        #num sides
+        sing, has = True, 'has'
+
         #X has the same color (as NP/each other)
-        return
+        if treeHas(tree, 'ASSNCOL'):
+            sing = treeHas(tree, 'ASSNCOLS')
+            has = searchFirst(tree, 'SHARES').leaves()[0]
+            pass
+        pass
 
-    #num sides
-
-    return
+    if sing:
+        #replace X has with X have
+        i = words.index(has)
+        words[i] = 'have'
+        pass
+    return ['does' if sing else 'do'] + words
 
 def handleFetch(tree, words, shapeDescList):
     fqTree = searchFirst(tree, 'FETCHQ')
