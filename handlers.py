@@ -238,7 +238,7 @@ def handleBool(tree, words, shapeDescList, sing):
             pass
         elif tree[-1].node == 'PP':
             #i.e. is X at the right? are Y below Z?
-            newFiltered = filterByPP(tree[-1], shapeDescList, shapeDescList)
+            newFiltered = filterByPP(tree[-1], filtered, shapeDescList)
             numSat = len(newFiltered)
             respond(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass

@@ -3,6 +3,7 @@ REASK = "Could you rephrase or ask/assert something different?"
 (N, SYMM, BASE, C, REGION, POLY) = (0,1,2,3,4,5)
 GENERICS = ('polygon', 'shape', 'figure', 'object')
 MINFRACTION = 7
+PADDING = 20
 TOP, RIGHT, BOTTOM, LEFT = 0,1,2,3
 DEFNS = {3:"triangle",4:"quadrilateral",5:"pentagon",6:"hexagon",8:"octagon"}
 REVDEFNS = {'triangle':3,'quadrilateral':4,'pentagon':5,'hexagon':6,'octagon':8}

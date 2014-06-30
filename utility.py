@@ -1,6 +1,6 @@
 from Queue import Queue
 from math import sqrt
-from constants import N, SYMM, BASE, C, REGION, POLY, SNUM
+from constants import N, SYMM, BASE, C, REGION, POLY, SNUM, PADDING
 def dist(a,b): return sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
 def avg(a,b): return (a+b)/2.0
 
@@ -15,7 +15,9 @@ def adj(x,y):
         return False
     xp,yp = x[POLY],y[POLY]
     xr,yr = avg(xp.height,xp.width),avg(yp.height,yp.width)
-    return dist((xp.cx,xp.cy),(yp.cx,yp.cy)) < (xr+yr)
+    d = dist((xp.cx,xp.cy),(yp.cx,yp.cy))
+
+    return d < (xr+yr) - PADDING or d < (xr+yr) + PADDING
 
 def below(a,b): return a[POLY].cy > b[POLY].maxY
 def above(a,b): return a[POLY].cy < b[POLY].minY

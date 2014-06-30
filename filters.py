@@ -48,7 +48,6 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         #nestedTree is the subtree of ppsTree that has the noun phrase (cn)
         rel = filterByCN(cn, shapeDescList)
         if treeHas(ppsTree, 'P1'): rel = filterByP1(ppsTree,rel)
-
         #For every shape in winnowed, count those in rel that satisfy relRule
         d = mapByRelation(winnowed, rel, relRule)
 
