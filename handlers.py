@@ -1,7 +1,7 @@
 from random import choice
 
 from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
-from filters import filterByNPSING, filterByNPPLUR, filterByPP, handleClose
+from filters import filterByNPSING, filterByNPPLUR, filterByPP, handleAdjacent
 from utility import treeHas, searchFirst, respond, colorHistogram, satEnum
 
 def handleBackground(bgc, tree):
@@ -17,19 +17,23 @@ def handleBackground(bgc, tree):
 
 def handleAssertion(tree, words, shapeDescList):
     #Rephrase the assertion as a boolean question!
-    if treeHas(tree, 'NA'):
+
+    if treeHas(tree, 'NIS') or treeHas(tree, 'NARE'):
         #X is/are <remainder of sentence>
-        naTree,rem = tree[0],tree[-1]
-        nounPhrase = naTree[0][0]
-        verb = naTree[0][-1]
-        #is/are X <rem>?
-        return [verb] + nounPhrase.leaves() + rem.leaves()
+        verbIndex = words.index('is' if 'is' in words else 'are')
+        verb = words[verbIndex]
+        nounPhrase = words[:verbIndex]
+        rem = words[verbIndex+1:]
+        #is/are X <remainder>?
+        return [verb] + nounPhrase + rem
+
     elif treeHas(tree, 'NQ'):
         #there is/are X
         nqTree = tree[-1]
         verb, nounPhrase = nqTree[0][0], nqTree[0][-1]
         #is/are there X?
         return [verb, 'there'] + nounPhrase.leaves()
+
     else:
         #num sides
         sing, has = True, 'has'
@@ -57,11 +61,9 @@ def handleFetch(tree, words, shapeDescList):
         filtered = filterByNPPLUR(tree, shapeDescList, shapeDescList)
         pass
     else:
-        #print tree
         ppTree = searchFirst(tree, 'PP')
         filtered = filterByPP(ppTree, shapeDescList, shapeDescList)
         pass
-    #print filtered
 
     response = ''
     for i in range(len(filtered)):
@@ -98,7 +100,7 @@ def handleCount(tree, words, shapeDescList):
     if treeHas(tree, 'CQ1'):
         cq = searchFirst(tree, 'CQ1')
         if treeHas(cq, 'PP'): filtered = filterByPP(cq, filtered, shapeDescList)
-        elif treeHas(cq, 'CLOSE'): filtered = handleClose(filtered)
+        elif treeHas(cq, 'ADJACENT'): filtered = handleAdjacent(filtered)
         elif treeHas(cq, 'C'):
             f = []
             for shapeDesc in filtered:
@@ -236,7 +238,7 @@ def handleBool(tree, words, shapeDescList, sing):
             pass
         elif tree[-1].node == 'PP':
             #i.e. is X at the right? are Y below Z?
-            newFiltered = filterByPP(tree[-1], filtered, shapeDescList)
+            newFiltered = filterByPP(tree[-1], shapeDescList, shapeDescList)
             numSat = len(newFiltered)
             respond(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass

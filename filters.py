@@ -1,7 +1,7 @@
 from random import sample
 from space import sameDesc
 from constants import DUNNO, REASK, GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
-from utility import treeHas, searchTree, searchFirst, satEnum
+from utility import treeHas, searchTree, searchFirst, satEnum, adj, below, above, left, right
 
 def filterByCN(cn, shapeDescList):
     #i.e. cn = ['green', 'octagon(s)'] or ['figure(s)']
@@ -26,19 +26,6 @@ def filterByCN(cn, shapeDescList):
             pass
         pass
     return ans
-
-def adj(x,y):
-    xr,yr = x[REGION],y[REGION]
-    shareRow,shareCol = (xr/3 == yr/3),(xr%3 == yr%3)
-    if shareRow ^ shareCol:
-        if shareRow: return abs(xr%3 - yr%3)==1
-        return abs(xr/3 - yr/3)==1
-    return False
-
-def below(a,b): return a[POLY].cy > b[POLY].maxY
-def above(a,b): return a[POLY].cy < b[POLY].minY
-def left(a,b): return a[POLY].cx < b[POLY].minX
-def right(a,b): return a[POLY].cx > b[POLY].maxX
 
 def filterByPP(ppTree, winnowed, shapeDescList):
     #From an already winnowed list, filter using prepositions
@@ -139,7 +126,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
 
     return ans
 
-def handleClose(winnowed):
+def handleAdjacent(winnowed):
     #Treat pairs of figures that satisfy "next to" as edges
     #Find connected components larger than one
     def explore(winnowed, adjList, node, unvisited, cc):

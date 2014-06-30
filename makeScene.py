@@ -45,7 +45,7 @@ def makeScene(backColor, shapeDescList):
         (dx, dy) = ((xthird-polygon.width)/2,(ythird-polygon.height)/2)
         polygon.translate(x+dx,y+dy)
 
-        #print polygon.width, polygon.height, polygon.pts
+        print polygon.width, polygon.height, polygon.pts
         draw.polygon(polygon.pts, c)
 
         shapeDescList[i] = (n, symm, base, c, region, polygon)

@@ -9,6 +9,7 @@ from bisect import bisect
 from polygon import BoundingBox, DEFNS, inScreen
 (X,Y) = (0,1)
 MINDIST = 10
+MINFRAC = 0.02
 
 def edge(i, j, grid, height, width):
     if i > 0 and grid[i-1][j] != grid[i][j]: return True
@@ -86,8 +87,9 @@ def negligible(p1,p2,p3):
         (a,b,c) = (-1*m,1,-1*intercept)
         d = abs(a*p2[X]+b*p2[Y]+c) / sqrt(a**2 + b**2)
         pass
+    return d < MINFRAC * dist(p1, p3)
     #return angle(p1,p2,p3) < 0.1*pi or d < MINDIST
-    return d < MINDIST
+    #return d < MINDIST
     #return angle(p1,p2,p3) < 0.1*pi
 
 def describe(edgePixels, swidth, sheight):

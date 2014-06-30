@@ -1,5 +1,27 @@
 from Queue import Queue
+from math import sqrt
 from constants import N, SYMM, BASE, C, REGION, POLY, SNUM
+def dist(a,b): return sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
+def avg(a,b): return (a+b)/2.0
+
+def adj(x,y):
+    
+    def oldAdj(x,y):
+        xr,yr = x[REGION],y[REGION]
+        shareRow,shareCol = (xr/3 == yr/3),(xr%3 == yr%3)
+        if shareRow ^ shareCol:
+            if shareRow: return abs(xr%3 - yr%3)==1
+            return abs(xr/3 - yr/3)==1
+        return False
+    xp,yp = x[POLY],y[POLY]
+    xr,yr = avg(xp.height,xp.width),avg(yp.height,yp.width)
+    return dist((xp.cx,xp.cy),(yp.cx,yp.cy)) < (xr+yr)
+
+def below(a,b): return a[POLY].cy > b[POLY].maxY
+def above(a,b): return a[POLY].cy < b[POLY].minY
+def left(a,b): return a[POLY].cx < b[POLY].minX
+def right(a,b): return a[POLY].cx > b[POLY].maxX
+
 def searchTree(t, label):
     #Find the instances of the label (if nested, choose closest to root)
     q = Queue()
