@@ -22,7 +22,6 @@
       -number of sides
       -Region of scene (0 is top left, 1 is top-center, ...8 is bottom right)
     -makeScene uses polygon.py to make the polygons, PIL to make the png
-    -In the future, the user should be able to m 
 
   -Querying (makeScene, interface, handlers, filters, utility, constants)
     -After creating the scene, makeScene presents a terminal interface
@@ -41,7 +40,8 @@
       -For simplicity, only positive assertions (no use of 'no' or 'not')
       -In theory, if a true assertion is shared among multiple scenes, we have found a shared property
       -How it's done:
-        -simplest - check the background color
 	-build the set of polygon colors
 	-build the set of polygon types
-	-build the set of locations
+	-build the set of global locations
+	-Make a copy of grammar.cfg with only those elements (& only assertions)
+	-Generate all assertions (!) and find the first N that are true (N=?)

@@ -19,10 +19,10 @@ def adj(x,y):
 
     return d < (xr+yr) - PADDING or d < (xr+yr) + PADDING
 
-def below(a,b): return a[POLY].cy > b[POLY].maxY
-def above(a,b): return a[POLY].cy < b[POLY].minY
-def left(a,b): return a[POLY].cx < b[POLY].minX
-def right(a,b): return a[POLY].cx > b[POLY].maxX
+def below(a,b): return a[POLY].cy > b[POLY].maxY and adj(a,b)
+def above(a,b): return a[POLY].cy < b[POLY].minY and adj(a,b)
+def left(a,b): return a[POLY].cx < b[POLY].minX and adj(a,b)
+def right(a,b): return a[POLY].cx > b[POLY].maxX and adj(a,b)
 
 def searchTree(t, label):
     #Find the instances of the label (if nested, choose closest to root)
