@@ -1,5 +1,5 @@
 from random import randint, choice
-from space import where, CENTER, OFFCENTER
+from space import where, preprocess
 from sys import maxint
 from constants import MINFRACTION, TOP,RIGHT,BOTTOM,LEFT, DEFNS
 
@@ -203,6 +203,14 @@ class BoundingBox():
         pass
     
     def whereAmI(self):
-
         desc = where(self.sheight, self.swidth, self.cy, self.cx)
         return desc
+
+    def sameDesc(self, loc):
+        #Check if what a person types in (loc) is equivalent to where we are
+        #Preprocess
+        preprocess(loc)
+        w = self.whereAmI()
+        preprocess(w)
+        if len(loc) == 1 and loc[0] in w: return True        
+        return loc == w

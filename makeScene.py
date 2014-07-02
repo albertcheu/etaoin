@@ -7,6 +7,7 @@ from color.constants import COLORS
 from polygon import *
 from subprocess import call
 from interface import interface
+from gen import gen, getGramDict, prune
 
 MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
 
@@ -94,4 +95,8 @@ if __name__ == "__main__":
         pass
 
     makeScene(bgc, shapeDescList)
-    interface(bgc, shapeDescList)
+
+    gramDict = getGramDict()
+    prune(gramDict, bgc, shapeDescList)
+
+    #interface(bgc, shapeDescList)

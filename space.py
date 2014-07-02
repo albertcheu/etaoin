@@ -57,14 +57,3 @@ def preprocess(desc):
     if MIDDLE in desc: desc.remove(MIDDLE)
     if UPPER in desc: desc[desc.index(UPPER)] = TOP
     if LOWER in desc: desc[desc.index(LOWER)] = BOTTOM
-
-def sameDesc(loc, w):
-    #Check if what a person types in (loc) is equivalent to what the above function determined (w)
-    
-    #Preprocess
-    preprocess(loc)
-    preprocess(w)
-
-    if len(loc) == 1 and loc[0] in w: return True
-
-    return loc == w

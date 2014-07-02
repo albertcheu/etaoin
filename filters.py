@@ -1,5 +1,4 @@
 from random import sample
-from space import sameDesc
 from constants import GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
 from utility import treeHas, searchTree, searchFirst, satEnum, adj, below, above, left, right
 
@@ -37,9 +36,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         loc = searchFirst(tree, 'GLOBALLOC').leaves()
         for shapeDesc in winnowed:
             #Find all instances within winnowed whose self-description matches
-            poly = shapeDesc[POLY]
-            w = poly.whereAmI()
-            if sameDesc(loc, w): ans.append(shapeDesc)
+            if shapeDesc[POLY].sameDesc(loc): ans.append(shapeDesc)
             pass
         return ans
 

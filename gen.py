@@ -1,8 +1,9 @@
-#!/usr/bin/python
-
 QUOTE = "'"
 PIPE = "|"
 
+from copy import copy
+from constants import N,C,POLY,REVDEFNS
+from utility import adj
 #Makes the first n sentences from generativeGram.cfg
 def gen(gramDict, n):
 
@@ -10,7 +11,7 @@ def gen(gramDict, n):
 
 def pruneColor(gramDict, bgc, shapeDescList):
     #Get rid of colors that are not there
-    colors = gramDict['C']
+    colors = copy(gramDict['C'])
     for color in colors:
         inList = False
         for shapeDesc in shapeDescList:
@@ -24,7 +25,7 @@ def pruneColor(gramDict, bgc, shapeDescList):
 
 def prunePoly(gramDict, shapeDescList):
     #Get rid of polygon types (triangle,quad,pent...)
-    specifics = gramDict['SPECIFICS']
+    specifics = copy(gramDict['SPECIFICS'])
     for polyType in specifics:
         inList = False
         for shapeDesc in shapeDescList:
@@ -32,7 +33,10 @@ def prunePoly(gramDict, shapeDescList):
                 inList = True
                 break
             pass
-        if not inList: gramDict['SPECIFICS'].remove(polyType)
+        if not inList:
+            gramDict['SPECIFICS'].remove(polyType)
+            gramDict['SPECIFICP'].remove(polyType+'s')
+            pass
         pass
     pass
 
@@ -42,7 +46,7 @@ def pruneGlobal(gramDict, shapeDescList):
     for globalLoc in globalLocs:
         inList = False
         for shapeDesc in shapeDescList:
-            if sameDesc(globalLoc.split(),shapeDesc[POLY].whereAmI()):
+            if shapeDesc[POLY].sameDesc(globalLoc.split()):
                 inList = True
                 break
             pass
@@ -71,6 +75,7 @@ def pruneAdj(gramDict, shapeDescList):
         pass
     if not haveAdj:
         gramDict.remove('ADJASSN')
+        gramDict['ASSERTION'].remove('ADJASSN')
         gramDict['PPS'].pop()
         pass
     pass
@@ -82,27 +87,23 @@ def prune(gramDict, bgc, shapeDescList):
     pruneAdj(gramDict, shapeDescList)
     pass
 
-if __name__ == "__main__":
+def getGramDict():
     f = open("generativeGram.cfg")
     lines = f.readlines()
     f.close()
     gramDict = {}
     for line in lines:
-        tokens = line.strip().split()
-        if len(tokens):
-            production = tokens[0]
+        if len(line) > 2:
+            p = tuple(t.strip() for t in line.strip().split('->'))
+            production,rhs = p
+            tokens = tuple(t.strip() for t in rhs.strip().split('|'))
             children = []
-            c = []
-            for token in tokens[2:]:
-                if token == PIPE:
-                    children.append(c)
-                    c = []
-                    pass
-                else: c.append(token.strip(QUOTE))
+            for token in tokens:
+                c = list(t.strip(QUOTE) for t in token.strip().split())
+                if len(c) == 1: c = c[0]
+                children.append(c)
                 pass
-            if len(children) == 0: children.append(c)
             gramDict[production] = children
             pass
         pass
-    print gramDict
-    pass
+    return gramDict
