@@ -113,16 +113,10 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         return ans
 
     #First pass
-    ppsTree = searchFirst(ppTree, 'PPS')
-    ans = filterByPPS(ppsTree, winnowed, shapeDescList)
-
-    #Recursive pass (possibly more than one preposition)
-    for child in ppTree:
-        if type(child) != str and child.node == 'PP':
-            ans = filterByPP(child, ans, shapeDescList)
-            break
+    for ppsTree in searchTree(ppTree, 'PPS'):
+        ans = filterByPPS(ppsTree, winnowed, shapeDescList)
+        winnowed = ans
         pass
-
     return ans
 
 def handleAdjacent(winnowed):
