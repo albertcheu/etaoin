@@ -179,7 +179,7 @@ def filterByNPPLUR(tree, winnowed, shapeDescList):
         sfiltered.update(set(filterByCN(subtree.leaves(),winnowed)))
         pass
     for subtree in npsing:
-        sfiltered.update(set(filterByNPSING(subtree,winnowed)))
+        sfiltered.update(set(filterByNPSING(subtree,winnowed,shapeDescList)))
         pass
     if treeHas(tree,'PP'): filtered = filterByPP(tree, list(sfiltered), shapeDescList)
     else: filtered = list(sfiltered)
