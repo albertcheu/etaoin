@@ -3,7 +3,7 @@ import sys
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
-from constants import NUMS
+from constants import NUMS, REASK
 from utility import treeHas, searchFirst
 from handlers import handleBackground, handleAssertion, handleQuestion, respond
 
