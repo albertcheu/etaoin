@@ -6,8 +6,44 @@ from constants import N,C,POLY,REVDEFNS
 from utility import adj
 #Makes the first n sentences from generativeGram.cfg
 def gen(gramDict, n):
+    def combo(leftList, rightList):
+        ans = []
+        if len(rightList) == 1:
+            for item in rightList: ans.append([item])
+            pass
+        else:
+            for item in leftList:
+                for newList in combo(rightList[0],rightList[1:]):
+                    ans.append([item]+newList)
+                    pass
+                pass
+            pass
+        return ans
 
-    pass
+    def genRec(gramDict, sym):
+        rules = gramDict[sym]
+        print rules
+        #One rule
+        if len(rules)==1 and type(rules[0])==str: rules = [rules]
+        ans = []
+        for rule in rules:
+            slots = []
+            if type(rule)==str:
+                if rule.isupper(): slots.append(genRec(gramDict, rule))
+                else: slots.append(rule)
+                pass
+            else:
+                for token in rule:
+                    if token.isupper(): slots.append(genRec(gramDict, token))
+                    else: slots.append(token)
+                    pass
+                pass
+            if len(slots) == 1: ans = combo([], slots)
+            else: ans = combo(slots[0],slots[1:])
+            pass
+        return ans
+    return genRec(gramDict, 'S')[:n]
+
 
 def pruneColor(gramDict, bgc, shapeDescList):
     #Get rid of colors that are not there
