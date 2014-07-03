@@ -4,46 +4,57 @@ PIPE = "|"
 from copy import copy
 from constants import N,C,POLY,REVDEFNS
 from utility import adj
+from Queue import Queue
 #Makes the first n sentences from generativeGram.cfg
 def gen(gramDict, n):
-    def combo(leftList, rightList):
-        ans = []
-        if len(rightList) == 1:
-            for item in rightList: ans.append([item])
-            pass
-        else:
-            for item in leftList:
-                for newList in combo(rightList[0],rightList[1:]):
-                    ans.append([item]+newList)
+    q = Queue()
+    stack = []
+    #Map each production to all the possible expansions of terminals
+    combos = {}
+    q.put('S')
+    while not q.empty():
+        production = q.get()
+        rules = gramDict[production]
+        #find all unexpanded productions
+        unexpanded = False
+        haveProd = False
+        for item in rules:
+            if type(item) == list:
+                for token in item:
+                    if token.isupper():
+                        haveProd = True
+                        if token not in combos:
+                            combos[token] = []
+                            unexpanded = True
+                            q.put(token)
+                            pass
+                        pass
+                    pass
+                pass
+            elif item.isupper():
+                haveProd = True
+                if item not in combos:
+                    combos[item] = []
+                    unexpanded = True
+                    q.put(item)
                     pass
                 pass
             pass
-        return ans
 
-    def genRec(gramDict, sym):
-        rules = gramDict[sym]
-        print rules
-        #One rule
-        if len(rules)==1 and type(rules[0])==str: rules = [rules]
-        ans = []
-        for rule in rules:
-            slots = []
-            if type(rule)==str:
-                if rule.isupper(): slots.append(genRec(gramDict, rule))
-                else: slots.append(rule)
-                pass
-            else:
-                for token in rule:
-                    if token.isupper(): slots.append(genRec(gramDict, token))
-                    else: slots.append(token)
-                    pass
-                pass
-            if len(slots) == 1: ans = combo([], slots)
-            else: ans = combo(slots[0],slots[1:])
-            pass
-        return ans
-    return genRec(gramDict, 'S')[:n]
+        #put this on the stack for later
+        if unexpanded: stack.append(production)
+        #all terminals
+        elif not haveProd: combos[production] = gramDict[production]
+        #All productions have been expanded
+        #else: stack.append(production)
 
+        pass
+    print combos
+    print stack
+    while len(stack) > 0:
+        production = stack.pop()
+        pass
+    return
 
 def pruneColor(gramDict, bgc, shapeDescList):
     #Get rid of colors that are not there
@@ -128,6 +139,12 @@ def getGramDict():
     lines = f.readlines()
     f.close()
     gramDict = {}
+    #GramDict maps productions (i.e. S, ASSERTION, NP, etc.) to rules
+    #a rule is a list of stuff, which we shall call items
+    #each item in a rule is one possible way of expanding the production
+    #if an item is a list, it denotes a sequence of terminals and/or more rules
+    #if an item is a lowercase string, it denotes a terminal
+    #if an item is an uppercase string, it denotes a nonterminal: a production
     for line in lines:
         if len(line) > 2:
             p = tuple(t.strip() for t in line.strip().split('->'))

@@ -2,8 +2,7 @@
 
 from PIL import Image, ImageDraw
 from copy import copy
-from random import randint, choice, shuffle
-from color.constants import COLORS
+from random import randint, choice
 from polygon import *
 from subprocess import call
 from interface import interface
@@ -56,7 +55,7 @@ def makeScene(backColor, shapeDescList):
     im.save("scene.png")
 
     #Show scene
-    call(["gnome-open","scene.png"])
+    #call(["gnome-open","scene.png"])
 
     pass
 
