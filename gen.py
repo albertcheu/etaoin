@@ -5,56 +5,126 @@ from copy import copy
 from constants import N,C,POLY,REVDEFNS
 from utility import adj
 from Queue import Queue
-#Makes the first n sentences from generativeGram.cfg
-def gen(gramDict, n):
-    q = Queue()
-    stack = []
-    #Map each production to all the possible expansions of terminals
-    combos = {}
-    q.put('S')
-    while not q.empty():
-        production = q.get()
-        rules = gramDict[production]
-        #find all unexpanded productions
-        unexpanded = False
-        haveProd = False
-        for item in rules:
-            if type(item) == list:
-                for token in item:
-                    if token.isupper():
-                        haveProd = True
-                        if token not in combos:
-                            combos[token] = []
-                            unexpanded = True
-                            q.put(token)
-                            pass
-                        pass
-                    pass
+
+def getGramDict():
+    f = open("generativeGram.cfg")
+    lines = f.readlines()
+    f.close()
+    gramDict = {}
+    #GramDict maps productions (i.e. S, ASSERTION, NP, etc.) to rules
+    #a rule is a list of stuff, which we shall call items
+    #each item in a rule is one possible way of expanding the production
+    #if an item is a list, it denotes a sequence of terminals and/or more rules
+    #if an item is a lowercase string, it denotes a terminal
+    #if an item is an uppercase string, it denotes a nonterminal: a production
+    for line in lines:
+        if len(line) > 2:
+            p = tuple(t.strip() for t in line.strip().split('->'))
+            production,rhs = p
+            tokens = tuple(t.strip() for t in rhs.strip().split('|'))
+            children = []
+            for token in tokens:
+                c = list(t.strip(QUOTE) for t in token.strip().split())
+                if len(c) == 1: c = c[0]
+                children.append(c)
                 pass
-            elif item.isupper():
-                haveProd = True
-                if item not in combos:
-                    combos[item] = []
-                    unexpanded = True
-                    q.put(item)
-                    pass
+            gramDict[production] = children
+            pass
+        pass
+    return gramDict
+
+def buildDAG(gramDict, combos, heights):
+    def foo(s, h, combos, q):
+        haveProd = False
+        if s.isupper():
+            haveProd = True
+            if s not in combos:
+                combos[s] = []
+                q.put((s,h+1))
                 pass
             pass
+        return haveProd
 
-        #put this on the stack for later
-        if unexpanded: stack.append(production)
+    #BFS to find the height of each node/production
+    q = Queue()
+    q.put(('S', 0))
+    while not q.empty():
+        production, h = q.get()
+        rule = gramDict[production]
+
+        #Does this production refer to other productions?
+        haveProd = False
+        for item in rule:
+            if type(item) == list:
+                for token in item: haveProd |= foo(token, h, combos, q)
+                pass
+            elif item.isupper():
+                foo(item, h, combos, q)
+                haveProd = True
+                pass
+            pass
+       
+        if h not in heights: heights[h] = []
+        heights[h].append(production)
+
         #all terminals
-        elif not haveProd: combos[production] = gramDict[production]
-        #All productions have been expanded
-        #else: stack.append(production)
+        if not haveProd: combos[production] = gramDict[production]
 
         pass
+    pass
+
+def stitchPossibilities(item, combos):
+    #The item is a list of strings, each either a production or a terminal
+    #This function finds all possible combinations of the sequence it describes
+    #Each production has possibilites, stored in combos[prod...]
+    def stitchRec(left, rightList):
+        if len(rightList) == 0:
+            if type(left) == str: return [left]
+            return left
+        rightList = stitchRec(rightList[0], rightList[1:])
+        ans = []
+        if type(left) == str:
+            for entry in rightList: ans.append(left + ' ' + entry)
+            pass
+        else:
+            for a in left:
+                for b in rightList: ans.append(a + ' ' + b)
+                pass
+            pass
+        return ans
+
+    l = list((combos[x] if x.isupper() else x) for x in item)
+    return stitchRec(l[0], l[1:])
+
+#Makes the first n sentences from generativeGram.cfg
+def gen(gramDict, n):
+    print gramDict
+    #Map each production to all the possible expansions of terminals
+    combos,heights = {},{}
+    combos['S'] = []
+    
+    buildDAG(gramDict, combos, heights)
+
     print combos
-    print stack
-    while len(stack) > 0:
-        production = stack.pop()
+    print heights
+
+    for i in range(len(heights)-1,-1,-1):
+        print i
+        for production in heights[i]:
+            print production
+            #Fill in combos[production]; guaranteed to have child productions!
+            for item in gramDict[production]:
+                if type(item) == list:
+                    #combos[production] += stitchPossibilities(item, combos)
+                    pass
+                elif item.isupper(): combos[production] += combos[item]
+                else: combos[production].append(item)
+                pass
+            if len(combos[production]) == 0: print 'oops', production
+            pass
+
         pass
-    return
+    return combos
 
 def pruneColor(gramDict, bgc, shapeDescList):
     #Get rid of colors that are not there
@@ -134,29 +204,3 @@ def prune(gramDict, bgc, shapeDescList):
     pruneAdj(gramDict, shapeDescList)
     pass
 
-def getGramDict():
-    f = open("generativeGram.cfg")
-    lines = f.readlines()
-    f.close()
-    gramDict = {}
-    #GramDict maps productions (i.e. S, ASSERTION, NP, etc.) to rules
-    #a rule is a list of stuff, which we shall call items
-    #each item in a rule is one possible way of expanding the production
-    #if an item is a list, it denotes a sequence of terminals and/or more rules
-    #if an item is a lowercase string, it denotes a terminal
-    #if an item is an uppercase string, it denotes a nonterminal: a production
-    for line in lines:
-        if len(line) > 2:
-            p = tuple(t.strip() for t in line.strip().split('->'))
-            production,rhs = p
-            tokens = tuple(t.strip() for t in rhs.strip().split('|'))
-            children = []
-            for token in tokens:
-                c = list(t.strip(QUOTE) for t in token.strip().split())
-                if len(c) == 1: c = c[0]
-                children.append(c)
-                pass
-            gramDict[production] = children
-            pass
-        pass
-    return gramDict
