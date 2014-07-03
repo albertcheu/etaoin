@@ -33,44 +33,39 @@ def getGramDict():
         pass
     return gramDict
 
-def buildDAG(gramDict, combos, heights):
-    def foo(s, h, combos, q):
+def buildDAG(gramDict, combos, dag):
+    def foo(s, gramDict, combos, dag):
         haveProd = False
         if s.isupper():
             haveProd = True
-            if s not in combos:
-                combos[s] = []
-                q.put((s,h+1))
-                pass
+            if s not in combos: explore(s, gramDict, combos, dag)
             pass
         return haveProd
 
-    #BFS to find the height of each node/production
-    q = Queue()
-    q.put(('S', 0))
-    while not q.empty():
-        production, h = q.get()
+    def explore(production, gramDict, combos, dag):
+        combos[production] = []
         rule = gramDict[production]
 
         #Does this production refer to other productions?
         haveProd = False
         for item in rule:
             if type(item) == list:
-                for token in item: haveProd |= foo(token, h, combos, q)
+                for token in item:
+                    haveProd |= foo(token, gramDict, combos, dag)
+                    pass
                 pass
             elif item.isupper():
-                foo(item, h, combos, q)
+                foo(item, gramDict, combos, dag)
                 haveProd = True
                 pass
             pass
-       
-        if h not in heights: heights[h] = []
-        heights[h].append(production)
 
         #all terminals
         if not haveProd: combos[production] = gramDict[production]
-
+        else: dag.append(production)
         pass
+
+    explore('S', gramDict, combos, dag)
     pass
 
 def stitchPossibilities(item, combos):
@@ -100,30 +95,26 @@ def stitchPossibilities(item, combos):
 def gen(gramDict, n):
     print gramDict
     #Map each production to all the possible expansions of terminals
-    combos,heights = {},{}
+    combos,dag = {},[]
     combos['S'] = []
     
-    buildDAG(gramDict, combos, heights)
+    buildDAG(gramDict, combos, dag)
 
     print combos
-    print heights
+    print dag
 
-    for i in range(len(heights)-1,-1,-1):
-        print i
-        for production in heights[i]:
-            print production
-            #Fill in combos[production]; guaranteed to have child productions!
-            for item in gramDict[production]:
-                if type(item) == list:
-                    #combos[production] += stitchPossibilities(item, combos)
-                    pass
-                elif item.isupper(): combos[production] += combos[item]
-                else: combos[production].append(item)
+    for production in dag:
+        #Fill in combos[production]; guaranteed to have child productions!
+        for item in gramDict[production]:
+            if type(item) == list:
+                combos[production] += stitchPossibilities(item, combos)
                 pass
-            if len(combos[production]) == 0: print 'oops', production
+            elif item.isupper(): combos[production] += combos[item]
+            else: combos[production].append(item)
             pass
-
+        if len(combos[production]) == 0: print 'oops', production
         pass
+
     return combos
 
 def pruneColor(gramDict, bgc, shapeDescList):
