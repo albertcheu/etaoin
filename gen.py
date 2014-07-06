@@ -3,7 +3,7 @@ PIPE = "|"
 
 from copy import copy
 from constants import N,C,POLY,REVDEFNS
-from utility import adj
+from utility import adj, left, right, above, below
 from Queue import Queue
 
 def getGramDict():
@@ -76,7 +76,7 @@ def stitchPossibilities(item, combos):
         if len(rightList) == 0:
             if type(left) == str: return [left]
             return left
-        rightList = stitchRec(rightList[0], rightList[1:])
+        rightList = stitchRec(rightList[0], rightList[1:])        
         ans = []
         if type(left) == str:
             for entry in rightList: ans.append(left + ' ' + entry)
@@ -93,26 +93,29 @@ def stitchPossibilities(item, combos):
 
 #Makes the first n sentences from generativeGram.cfg
 def gen(gramDict, n):
-    print gramDict
+    #print gramDict
     #Map each production to all the possible expansions of terminals
     combos,dag = {},[]
     combos['S'] = []
     
     buildDAG(gramDict, combos, dag)
 
-    print combos
     print dag
+    print len(dag)
 
-    for production in dag:
+    for production in dag[:18]:
         #Fill in combos[production]; guaranteed to have child productions!
+        print gramDict[production]
         for item in gramDict[production]:
             if type(item) == list:
                 combos[production] += stitchPossibilities(item, combos)
                 pass
             elif item.isupper(): combos[production] += combos[item]
             else: combos[production].append(item)
+
             pass
-        if len(combos[production]) == 0: print 'oops', production
+        print len(combos[production])
+        
         pass
 
     return combos
@@ -159,7 +162,9 @@ def pruneGlobal(gramDict, shapeDescList):
                 break
             pass
         if not inList:
-            if ' ' in globalLoc: pass
+            if globalLoc.split() in gramDict['CORNERLOC']:
+                gramDict['CORNERLOC'].remove(globalLoc.split())
+                pass
             elif globalLoc in gramDict['HORIZ']:
                 gramDict['HORIZ'].remove(globalLoc)
                 pass
@@ -168,9 +173,35 @@ def pruneGlobal(gramDict, shapeDescList):
                 pass
             else: gramDict['GLOBALLOC'].remove(globalLoc)
         pass
+    for i in range(len(gramDict['CORNERLOC'])):
+        gramDict['CORNERLOC'][i] = ' '. join(gramDict['CORNERLOC'][i])
+        pass
+    for loc in ('CORNERLOC','HORIZ','VERT'):
+        if len(gramDict[loc]) == 0:
+            gramDict.remove(loc)
+            gramDict['GLOBALLOC'].remove(loc)
+            pass
+        pass
+    if len(gramDict['GLOBALLOC'])==0: gramDict.remove('GLOBALLOC')
     pass
 
 def pruneAdj(gramDict, shapeDescList):
+    def pruneCardinal(gramDict, shapeDescList):
+        for r in range(4):
+            relRule = (left,right,above,below)[r]
+            present = False
+            for i in range(len(shapeDescList)):
+                for j in range(i, len(shapeDescList)):
+                    a,b = shapeDescList[i],shapeDescList[j]
+                    if relRule(a,b) or (b,a):
+                        present = True
+                        break                    
+                    pass
+                if present: break
+                pass
+            if not present: del gramDict['CARDINAL'][r:r+1]
+            pass
+        pass
     #Get rid of adjacencies
     haveAdj = False
     for i in range(len(shapeDescList)):
@@ -183,9 +214,13 @@ def pruneAdj(gramDict, shapeDescList):
         pass
     if not haveAdj:
         gramDict.remove('ADJASSN')
-        gramDict['ASSERTION'].remove('ADJASSN')
+        gramDict.remove('P2')
+        gramDict.remove('ADJACENT')
+        gramDict.remove('CARDINAL')
+        gramDict['ASSERTION'].pop()
         gramDict['PPS'].pop()
         pass
+    else: pruneCardinal(gramDict, shapeDescList)
     pass
 
 def prune(gramDict, bgc, shapeDescList):
