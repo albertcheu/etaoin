@@ -97,5 +97,5 @@ if __name__ == "__main__":
 
     gramDict = getGramDict()
     prune(gramDict, bgc, shapeDescList)
-    gen(gramDict,10)
+    gen(gramDict,10,shapeDescList)
     #interface(bgc, shapeDescList)

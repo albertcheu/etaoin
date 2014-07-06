@@ -73,7 +73,7 @@ def satEnum(enumTree, winnowed, numSat):
 
     #all other triangles; assumes the subject is singular
     #Technically wrong but fix later
-    if 'other' in enumWords: return numSat == len(winnowed)-1
+    #if 'other' in enumWords: return numSat == len(winnowed)-1
 
     #all/every/each shape(s)
     if enumWords[0] in ('all','every','each'): return numSat == len(winnowed)

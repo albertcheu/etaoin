@@ -2,9 +2,9 @@ QUOTE = "'"
 PIPE = "|"
 
 from copy import copy
-from constants import N,C,POLY,REVDEFNS
+from constants import N,C,POLY,REVDEFNS, COLORS,NUMS,SNUM
 from utility import adj, left, right, above, below
-from Queue import Queue
+from filters import filterByCN
 
 def getGramDict():
     f = open("generativeGram.cfg")
@@ -79,11 +79,15 @@ def stitchPossibilities(item, combos):
         rightList = stitchRec(rightList[0], rightList[1:])        
         ans = []
         if type(left) == str:
-            for entry in rightList: ans.append(left + ' ' + entry)
+            for entry in rightList:
+                if not entry.endswith(left): ans.append(left + ' ' + entry)
+                pass
             pass
         else:
             for a in left:
-                for b in rightList: ans.append(a + ' ' + b)
+                for b in rightList:
+                    if not b.endswith(a): ans.append(a + ' ' + b)
+                    pass
                 pass
             pass
         return ans
@@ -92,33 +96,64 @@ def stitchPossibilities(item, combos):
     return stitchRec(l[0], l[1:])
 
 #Makes the first n sentences from generativeGram.cfg
-def gen(gramDict, n):
-    #print gramDict
+def gen(gramDict, n, shapeDescList):
     #Map each production to all the possible expansions of terminals
     combos,dag = {},[]
     combos['S'] = []
     
     buildDAG(gramDict, combos, dag)
-
     print dag
-    print len(dag)
 
-    for production in dag[:18]:
+    for production in dag[:19]:
         #Fill in combos[production]; guaranteed to have child productions!
-        print gramDict[production]
         for item in gramDict[production]:
             if type(item) == list:
                 combos[production] += stitchPossibilities(item, combos)
                 pass
             elif item.isupper(): combos[production] += combos[item]
             else: combos[production].append(item)
-
             pass
-        print len(combos[production])
-        
-        pass
 
+        pruneCombos(production, combos, shapeDescList)
+        print production, len(combos[production])
+        pass
+    
     return combos
+
+def pruneCombos(production, combos, shapeDescList):
+    #post-pruning: eliminate combos of color and nouns that DNE
+    if production in ('NPSINGTERT','NPPLUR1SEC'):
+        newList = []
+        for item in combos[production]:
+            if len(filterByCN(item.split(),shapeDescList)) > 0:
+                newList.append(item)
+                pass
+            pass
+        combos[production] = newList
+        pass
+    #eliminate combos of enumeration & nouns that DNE (i.e. five triangles)
+    elif production in ('NPPLUR1','NPSINGSEC'):
+        newList = []
+        for item in combos[production]:
+            
+            itemList = item.split()
+            cn = [itemList[-1]]
+            if len(itemList) > 1 and itemList[-2] in COLORS:
+                cn = [itemList[-2]] + cn
+                pass
+            notIn = 0
+            for num in NUMS:
+                if num in item:
+                    good = SNUM[num] <= len(filterByCN(cn,shapeDescList))
+                    if good: newList.append(item)            
+                    pass
+                else: notIn += 1
+                pass
+            if notIn == len(NUMS): newList.append(item)
+            pass
+        combos[production] = newList
+        pass
+    pass
 
 def pruneColor(gramDict, bgc, shapeDescList):
     #Get rid of colors that are not there
