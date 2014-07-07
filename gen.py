@@ -5,8 +5,8 @@ from copy import copy
 
 from nltk.tree import Tree
 
-from constants import N,C,POLY,REVDEFNS, COLORS,NUMS,SNUM
-from utility import adj, left, right, above, below
+from constants import N,C,POLY,REVDEFNS, COLORS
+from utility import adj, left, right, above, below, treeHas,searchFirst,satEnum
 from filters import filterByCN
 
 def getGramDict():
@@ -85,27 +85,31 @@ def stitchPossibilities(production, item, combos):
         #Base case: bottom of recursion
         if len(rightList) == 0:
             if type(left) == str: return [[left]]
-            return [left]
+            return left
 
         ans = stitchRec(rightList[0], rightList[1:])
         newAns = []
         for i in range(len(ans)):
-            if type(left) == str: newAns.append([left]+ans[i])
+            t = [ans[i]] if type(ans[i])==Tree else ans[i]
+            if type(left) == str: newAns.append([left]+t)
 
             else:
-                for s in left: newAns.append([s]+ans[i])
+                for s in left: newAns.append([s]+t)
                 pass
             pass
-        
         return newAns
 
     l = list((combos[x] if x.isupper() else x) for x in item)
     q = stitchRec(l[0], l[1:])
     ans = []
     for possibility in q:
-        print possibility
-        ans.append(Tree(production,possibility))
-    #print ans
+        length = len(possibility)
+        skip = False
+        for i in range(length):
+            for j in range(i+1,length):
+                if possibility[i] == possibility[j]: skip = True
+        if not skip: ans.append(Tree(production,possibility))
+        pass
     return ans
 
 #Makes the first n sentences from generativeGram.cfg
@@ -117,12 +121,13 @@ def gen(gramDict, n, shapeDescList):
     combos['S'] = []
     dag = buildDAG(gramDict, combos)
 
-    for production in dag[:5]:
+    for production in dag[:18]:
         #Fill in combos[production]; guaranteed to have child productions!
         for item in gramDict[production]:
             #A sequence (i.e. C NSING)
             if type(item) == list:
-                combos[production] += stitchPossibilities(production, item, combos)
+                combos[production] += stitchPossibilities(production,
+                                                          item, combos)
                 pass
             #A plain production
             elif item.isupper():
@@ -133,20 +138,20 @@ def gen(gramDict, n, shapeDescList):
             #A terminal
             else: combos[production].append(Tree(production,[item]))
             pass
-        #for p in combos[production]: print p
+
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
-    
+
     return combos
 
 def pruneCombos(production, combos, shapeDescList):
     #post-pruning: eliminate combos of color and nouns that DNE
     if production in ('NPSINGTERT','NPPLUR1SEC'):
         newList = []
-        for item in combos[production]:
-            if len(filterByCN(item.leaves(),shapeDescList)) > 0:
-                newList.append(item)
+        for tree in combos[production]:
+            if len(filterByCN(tree.leaves(),shapeDescList)) > 0:
+                newList.append(tree)
                 pass
             pass
         combos[production] = newList
@@ -154,22 +159,24 @@ def pruneCombos(production, combos, shapeDescList):
     #eliminate combos of enumeration & nouns that DNE (i.e. five triangles)
     elif production in ('NPPLUR1','NPSINGSEC'):
         newList = []
-        for item in combos[production]:
-            
-            itemList = item.split()
-            cn = [itemList[-1]]
-            if len(itemList) > 1 and itemList[-2] in COLORS:
-                cn = [itemList[-2]] + cn
-                pass
-            notIn = 0
-            for num in NUMS:
-                if num in item:
-                    good = SNUM[num] <= len(filterByCN(cn,shapeDescList))
-                    if good: newList.append(item)            
+        for tree in combos[production]:
+            leaves = tree.leaves()
+            x = len(leaves)-1
+            cn = leaves[x:]
+            if len(leaves) > 2 and leaves[-2] in COLORS: cn = leaves[x-1:]
+            filtered = filterByCN(cn,shapeDescList)
+            if len(filtered) > 0:
+                enumTree = None
+                if production == 'NPPLUR1' and treeHas(tree, 'ENUMPLUR'):
+                    enumTree = searchFirst(tree,'ENUMPLUR')
                     pass
-                else: notIn += 1
+                elif production == 'NPSINGSEC' and treeHas(tree,'ENUMSING'):
+                    enumTree = searchFirst(tree,'ENUMSING')
+                    pass
+                if satEnum(enumTree, filtered, shapeDescList):
+                    newList.append(tree)
+                    pass
                 pass
-            if notIn == len(NUMS): newList.append(item)
             pass
         combos[production] = newList
         pass

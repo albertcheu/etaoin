@@ -64,12 +64,13 @@ def satEnum(enumTree, winnowed, numSat):
         return numSat > 0
 
     enumWords = enumTree.leaves()
-    #i.e. there are three polygons
-    if treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
 
     #Except for one/two/.., all X ...
     if 'except' in enumWords:
         return numSat == len(winnowed) - SNUM[enumWords[-2]]
+
+    #i.e. there are three polygons
+    if treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
 
     #all other triangles; assumes the subject is singular
     #Technically wrong but fix later
