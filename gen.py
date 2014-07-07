@@ -2,6 +2,9 @@ QUOTE = "'"
 PIPE = "|"
 
 from copy import copy
+
+from nltk.tree import Tree
+
 from constants import N,C,POLY,REVDEFNS, COLORS,NUMS,SNUM
 from utility import adj, left, right, above, below
 from filters import filterByCN
@@ -33,7 +36,7 @@ def getGramDict():
         pass
     return gramDict
 
-def buildDAG(gramDict, combos, dag):
+def buildDAG(gramDict, combos):
     def foo(s, gramDict, combos, dag):
         haveProd = False
         if s.isupper():
@@ -61,59 +64,76 @@ def buildDAG(gramDict, combos, dag):
             pass
 
         #all terminals
-        if not haveProd: combos[production] = gramDict[production]
+        if not haveProd:
+            combos[production] = list(Tree(production, [x]) for x in gramDict[production])
+            pass
         else: dag.append(production)
         pass
-
+    dag = []
     explore('S', gramDict, combos, dag)
-    pass
+    return dag
 
-def stitchPossibilities(item, combos):
-    #The item is a list of strings, each either a production or a terminal
+def stitchPossibilities(production, item, combos):
+    #type(item) in (str,list); if list, it is a list of Trees
     #This function finds all possible combinations of the sequence it describes
     #Each production has possibilites, stored in combos[prod...]
+
     def stitchRec(left, rightList):
+        #Left is either a list of Trees (an expanded nonterminal) or a str
+        #rightList is a list of everything after left in 'item'
+
+        #Base case: bottom of recursion
         if len(rightList) == 0:
-            if type(left) == str: return [left]
-            return left
-        rightList = stitchRec(rightList[0], rightList[1:])        
-        ans = []
-        if type(left) == str:
-            for entry in rightList:
-                if not entry.endswith(left): ans.append(left + ' ' + entry)
+            if type(left) == str: return [[left]]
+            return [left]
+
+        ans = stitchRec(rightList[0], rightList[1:])
+        newAns = []
+        for i in range(len(ans)):
+            if type(left) == str: newAns.append([left]+ans[i])
+
+            else:
+                for s in left: newAns.append([s]+ans[i])
                 pass
             pass
-        else:
-            for a in left:
-                for b in rightList:
-                    if not b.endswith(a): ans.append(a + ' ' + b)
-                    pass
-                pass
-            pass
-        return ans
+        
+        return newAns
 
     l = list((combos[x] if x.isupper() else x) for x in item)
-    return stitchRec(l[0], l[1:])
+    q = stitchRec(l[0], l[1:])
+    ans = []
+    for possibility in q:
+        print possibility
+        ans.append(Tree(production,possibility))
+    #print ans
+    return ans
 
 #Makes the first n sentences from generativeGram.cfg
 def gen(gramDict, n, shapeDescList):
     #Map each production to all the possible expansions of terminals
-    combos,dag = {},[]
+    #combos = mapping of str (a production) to list of trees
+    #each tree is a possible instance of the production
+    combos = {}
     combos['S'] = []
-    
-    buildDAG(gramDict, combos, dag)
-    print dag
+    dag = buildDAG(gramDict, combos)
 
-    for production in dag[:19]:
+    for production in dag[:5]:
         #Fill in combos[production]; guaranteed to have child productions!
         for item in gramDict[production]:
+            #A sequence (i.e. C NSING)
             if type(item) == list:
-                combos[production] += stitchPossibilities(item, combos)
+                combos[production] += stitchPossibilities(production, item, combos)
                 pass
-            elif item.isupper(): combos[production] += combos[item]
-            else: combos[production].append(item)
+            #A plain production
+            elif item.isupper():
+                for possibility in combos[item]:
+                    combos[production].append(Tree(production, [possibility]))
+                    pass
+                pass
+            #A terminal
+            else: combos[production].append(Tree(production,[item]))
             pass
-
+        #for p in combos[production]: print p
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
@@ -125,7 +145,7 @@ def pruneCombos(production, combos, shapeDescList):
     if production in ('NPSINGTERT','NPPLUR1SEC'):
         newList = []
         for item in combos[production]:
-            if len(filterByCN(item.split(),shapeDescList)) > 0:
+            if len(filterByCN(item.leaves(),shapeDescList)) > 0:
                 newList.append(item)
                 pass
             pass
@@ -230,7 +250,7 @@ def pruneAdj(gramDict, shapeDescList):
                     a,b = shapeDescList[i],shapeDescList[j]
                     if relRule(a,b) or (b,a):
                         present = True
-                        break                    
+                        break
                     pass
                 if present: break
                 pass
