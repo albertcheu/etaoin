@@ -9,7 +9,7 @@ from constants import N,C,POLY,REVDEFNS, COLORS
 from utility import adj, left, right, above, below, treeHas,searchFirst,satEnum
 from filters import filterByCN, filterByPP
 
-def getGramDict():
+def getGramDict(bgc, shapeDescList):
     f = open("generativeGram.cfg")
     lines = f.readlines()
     f.close()
@@ -34,6 +34,7 @@ def getGramDict():
             gramDict[production] = children
             pass
         pass
+    prune(gramDict, bgc, shapeDescList)
     return gramDict
 
 def buildDAG(gramDict, combos):
@@ -138,7 +139,7 @@ def gen(gramDict, n, shapeDescList):
             #A terminal
             else: combos[production].append(Tree(production,[item]))
             pass
-        print production, len(combos[production])
+        #print production, len(combos[production])
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
@@ -182,6 +183,7 @@ def pruneCombos(production, combos, shapeDescList):
         pass
     elif production in ('PPS','PP'):
         newList = []
+        print '--begin pp pruning'
         for tree in combos[production]:
             if len(filterByPP(Tree('PP',[tree]),shapeDescList,shapeDescList))>0:
                 newList.append(tree)

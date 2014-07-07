@@ -8,7 +8,10 @@ from utility import treeHas, searchFirst
 from handlers import handleBackground, handleAssertion, handleQuestion, respond
 
 def parseInput(parser, words, bgc, shapeDescList):
-    try: tree = parser.parse(words)
+    try:
+        tree = parser.parse(words)
+        #print tree
+        pass
     except:
         respond(REASK)
         print sys.exc_info()

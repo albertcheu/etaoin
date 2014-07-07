@@ -95,7 +95,6 @@ if __name__ == "__main__":
 
     makeScene(bgc, shapeDescList)
 
-    gramDict = getGramDict()
-    prune(gramDict, bgc, shapeDescList)
+    gramDict = getGramDict(bgc, shapeDescList)
     gen(gramDict,10,shapeDescList)
     #interface(bgc, shapeDescList)
