@@ -7,7 +7,7 @@ from nltk.tree import Tree
 
 from constants import N,C,POLY,REVDEFNS, COLORS
 from utility import adj, left, right, above, below, treeHas,searchFirst,satEnum
-from filters import filterByCN
+from filters import filterByCN, filterByPP
 
 def getGramDict():
     f = open("generativeGram.cfg")
@@ -120,8 +120,8 @@ def gen(gramDict, n, shapeDescList):
     combos = {}
     combos['S'] = []
     dag = buildDAG(gramDict, combos)
-
-    for production in dag[:18]:
+    print dag
+    for production in dag[:19]:
         #Fill in combos[production]; guaranteed to have child productions!
         for item in gramDict[production]:
             #A sequence (i.e. C NSING)
@@ -138,7 +138,7 @@ def gen(gramDict, n, shapeDescList):
             #A terminal
             else: combos[production].append(Tree(production,[item]))
             pass
-
+        print production, len(combos[production])
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
@@ -180,6 +180,15 @@ def pruneCombos(production, combos, shapeDescList):
             pass
         combos[production] = newList
         pass
+    elif production in ('PPS','PP'):
+        newList = []
+        for tree in combos[production]:
+            if len(filterByPP(Tree('PP',[tree]),shapeDescList,shapeDescList))>0:
+                newList.append(tree)
+                pass
+            pass
+        combos[production] = newList
+        pass
     pass
 
 def pruneColor(gramDict, bgc, shapeDescList):
@@ -211,6 +220,8 @@ def prunePoly(gramDict, shapeDescList):
             gramDict['SPECIFICP'].remove(polyType+'s')
             pass
         pass
+    if len(gramDict['SPECIFICS'])==0:gramDict.remove('SPECIFICS')
+    if len(gramDict['SPECIFICP'])==0:gramDict.remove('SPECIFICP')
     pass
 
 def pruneGlobal(gramDict, shapeDescList):
