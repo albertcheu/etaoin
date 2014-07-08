@@ -1,17 +1,15 @@
 from random import choice
 
-from constants import N, SYMM, BASE, C, REGION, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
+from constants import N, C, POLY, GENERICS, DEFNS, SNUM, DNE, THEPROB, YES, NO
 from filters import filterByNPSING, filterByNPPLUR, filterByPP, handleAdjacent
-from utility import treeHas, searchFirst, respond, colorHistogram, satEnum
+from utility import treeHas, searchFirst, colorHistogram, satEnum
 
 def handleBackground(bgc, tree):
     if treeHas(tree, 'BACKGROUND'):
         if treeHas(tree, 'C'):
-            tf = bgc in col
-            if treeHas(tree, 'QUESTION'): respond({True:YES,False:NO}[tf])
-            else: respond(tf)
-            pass
-        else: respond(bgc)
+            tf = bgc in tree.leaves()
+            return YES if tf else NO
+        if treeHas(tree, 'FETCHQ'): return bgc
         return True
     return False
 
@@ -34,22 +32,20 @@ def handleAssertion(tree, words, shapeDescList):
         #is/are there X?
         return [verb, 'there'] + nounPhrase.leaves()
 
-    else:
-        #num sides
-        sing, has = True, 'has'
+    #num sides
+    sing, has = True, 'has'
 
-        #X has the same color (as NP/each other)
-        if treeHas(tree, 'ASSNCOL'):
-            sing = treeHas(tree, 'ASSNCOLS')
-            has = searchFirst(tree, 'SHARES').leaves()[0]
-            pass
+    #X has the same color (as NP/each other)
+    if treeHas(tree, 'ASSNCOL'):
+        sing = treeHas(tree, 'ASSNCOLS')
+        has = searchFirst(tree, 'SHARES' if sing else 'SHAREP').leaves()[0]
         pass
-
     if sing:
         #replace X has with X have
         i = words.index(has)
         words[i] = 'have'
         pass
+
     return ['does' if sing else 'do'] + words
 
 def handleFetch(tree, words, shapeDescList):
@@ -89,7 +85,7 @@ def handleFetch(tree, words, shapeDescList):
 
         pass
     if len(filtered) == 0: response = DNE
-    respond(response)
+    return(response)
     pass
 
 def handleCount(tree, words, shapeDescList):
@@ -110,7 +106,7 @@ def handleCount(tree, words, shapeDescList):
                 pass
             filtered = f
             pass
-        respond(len(filtered))
+        return(len(filtered))
         pass
     else:
         cq = searchFirst(tree, 'CQ2')
@@ -122,7 +118,7 @@ def handleCount(tree, words, shapeDescList):
                 if hist[col] > 1: response += str(hist[col])+' '+col+', '
                 pass
             response.strip(' ,')
-            respond(response if len(response) else 'None!')
+            return(response if len(response) else 'None!')
             pass
         else:
             #same color as something else (NPPLUR or NPSING)
@@ -145,7 +141,7 @@ def handleCount(tree, words, shapeDescList):
                 if shapeDesc[C] == col: ans += 1
                 pass
 
-            respond(ans)
+            return(ans)
             pass
 
         pass
@@ -161,10 +157,10 @@ def countTrue(winnowed, test):
 def checkThe(npsing, winnowed):
     if npsing.leaves()[0] == 'the':
         if len(winnowed) > 1:
-            respond(THEPROB)
+            return(THEPROB)
             return False
         elif len(winnowed) == 0:
-            respond(DNE)
+            return(DNE)
             return False
         pass
     return True
@@ -173,7 +169,7 @@ def handleBool(tree, words, shapeDescList, sing):
     if treeHas(tree, 'THING'):
         #Is there something PP?
         filtered = filterByPP(tree, shapeDescList, shapeDescList)
-        respond(YES if len(filtered) else NO)
+        return(YES if len(filtered) else NO)
         pass
     else:
         label,enumLabel=('NPSING','ENUMSING') if sing else ('NPPLUR','ENUMPLUR')
@@ -189,7 +185,7 @@ def handleBool(tree, words, shapeDescList, sing):
                 snum = searchFirst(tree, 'NUM').leaves()[0]
                 matchSides = lambda sD: sD[N] == SNUM[snum]
                 numSat = countTrue(filtered,matchSides)
-                respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+                return(YES if satEnum(enumTree, filtered, numSat) else NO)
                 pass
             elif treeHas(tree, 'NP'):
                 #do(es) X have the same color as NP? (X -> filtered)
@@ -199,13 +195,13 @@ def handleBool(tree, words, shapeDescList, sing):
                 histList = colorHistogram(otherFiltered).keys()
                 if len(histList) > 1:
                     np_words = " ".join(np[0].leaves())
-                    respond(np_words+" don't have the same color to begin with")
+                    return(np_words+" don't have the same color to begin with")
                     pass
                 else:
                     col = histList[0]
                     matchColor = lambda x: x[C] == col
                     numSat = countTrue(filtered, matchColor)
-                    respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+                    return(YES if satEnum(enumTree, filtered, numSat) else NO)
                     pass
                 pass
             else:
@@ -213,7 +209,7 @@ def handleBool(tree, words, shapeDescList, sing):
                 hist = colorHistogram(filtered)
                 col = hist.keys()[0]
                 numSat = countTrue(filtered, lambda sD: sD[C] == col)
-                respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+                return(YES if satEnum(enumTree, filtered, numSat) else NO)
                 pass
             pass
         elif 'there' in words:
@@ -222,25 +218,25 @@ def handleBool(tree, words, shapeDescList, sing):
             if type(tree[0]) != str:
                 filtered = filterByPP(tree[0],filtered,shapeDescList)
                 pass
-            respond(YES if satEnum(enumTree, filtered, len(filtered)) else NO)
+            return(YES if satEnum(enumTree, filtered, len(filtered)) else NO)
             pass
         elif tree[1].node == 'C':
             #Is/are X <color>?
             if sing and not checkThe(nphrase, filtered): return
             col = words[-1]
             numSat = countTrue(filtered, lambda sD:sD[C]==col)
-            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+            return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif treeHas(tree, 'UNITE'):
             #Are X close to one another? (i.e. 5 X, all X)
             numSat = len(handleClose(filtered))
-            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+            return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif tree[-1].node == 'PP':
             #i.e. is X at the right? are Y below Z?
             newFiltered = filterByPP(tree[-1], filtered, shapeDescList)
             numSat = len(newFiltered)
-            respond(YES if satEnum(enumTree, filtered, numSat) else NO)
+            return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         else:
             #Is/are X <instance(s) of Y>?
@@ -252,7 +248,7 @@ def handleBool(tree, words, shapeDescList, sing):
             penumTree = searchFirst(pnphrase, enumLabel)
             pfiltered = filterFunc(pnphrase, shapeDescList, shapeDescList)
             numSat = len(filterFunc(nphrase, pfiltered, shapeDescList))
-            respond(YES if satEnum(penumTree, pfiltered, numSat) else NO)
+            return(YES if satEnum(penumTree, pfiltered, numSat) else NO)
 
             pass
         pass
@@ -262,8 +258,8 @@ def handleQuestion(tree, words, shapeDescList):
     if treeHas(tree, 'BOOLQ'):
         sing = treeHas(tree, 'BOOLSING')
         subtree = searchFirst(tree, 'BOOLSING' if sing else 'BOOLPLUR')
-        handleBool(subtree, words, shapeDescList, sing)
+        return handleBool(subtree, words, shapeDescList, sing)
         
-    elif treeHas(tree, 'COUNTQ'): handleCount(tree, words, shapeDescList)
-    else: handleFetch(tree, words, shapeDescList)
-    pass
+    elif treeHas(tree, 'COUNTQ'): return handleCount(tree, words, shapeDescList)
+    return handleFetch(tree, words, shapeDescList)
+

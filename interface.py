@@ -3,13 +3,15 @@ import sys
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
 
-from constants import NUMS, REASK
-from utility import treeHas, searchFirst
-from handlers import handleBackground, handleAssertion, handleQuestion, respond
+from constants import NUMS, REASK, NO, YES
+from utility import treeHas, searchFirst, respond
+from handlers import handleBackground, handleAssertion, handleQuestion
 
-def parseInput(parser, words, bgc, shapeDescList):
+PARSER = lcp(load('file:grammar.cfg'))
+
+def parseInput(words, bgc, shapeDescList):
     try:
-        tree = parser.parse(words)
+        tree = PARSER.parse(words)
         #print tree
         pass
     except:
@@ -18,24 +20,38 @@ def parseInput(parser, words, bgc, shapeDescList):
         return
 
     #Easiest type of question/assertion is about the background color
-    if not handleBackground(bgc, tree):
-
+    x = handleBackground(bgc, tree)
+    if not x:
+        a = treeHas(tree,'ASSERTION')
         #Rephrase the sentence into a question
-        if treeHas(tree,'ASSERTION'):
+        if a:
             words = handleAssertion(searchFirst(tree,'ASSERTION'),
                                     words, shapeDescList)
-            tree = parser.parse(words)
+            tree = PARSER.parse(words)
             pass
+
         #Answer the question
-        handleQuestion(tree, words, shapeDescList)
+        ans = handleQuestion(tree, words, shapeDescList)
+        return ans if not a else ans == YES
+
+    return x
+
+def processWords(words, bgc, shapeDescList):
+    for i in range(len(words)):
+        w = words[i]
+        if w.endswith(","): words[i] = w[:-1]
+        if w.endswith("'s"): words[i] = w[:-2]+" is"
+        if w.isdigit(): words[i] = NUMS[int(w)]
+        pass
+    newords = []
+    for w in words:
+        for nw in w.split(): newords.append(nw)
         pass
 
-    pass
+    return parseInput(newords, bgc, shapeDescList)
 
 def interface(bgc, shapeDescList):
     respond("Ask me a question or assert a T/F statement")
-
-    parser = lcp(load('file:grammar.cfg'))
 
     #Main loop
     while True:
@@ -46,18 +62,7 @@ def interface(bgc, shapeDescList):
 
         #Work on the words
         words = q.split()
-        for i in range(len(words)):
-            w = words[i]
-            if w.endswith(","): words[i] = w[:-1]
-            if w.endswith("'s"): words[i] = w[:-2]+" is"
-            if w.isdigit(): words[i] = NUMS[int(w)]
-            pass
-        newords = []
-        for w in words:
-            for nw in w.split(): newords.append(nw)
-            pass
-
-        parseInput(parser, newords, bgc, shapeDescList)
+        respond(processWords(words, bgc, shapeDescList))
 
         pass
     pass

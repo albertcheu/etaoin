@@ -5,7 +5,7 @@ from copy import copy
 from random import randint, choice
 from polygon import *
 from subprocess import call
-from interface import interface
+from interface import interface,processWords
 from gen import gen, getGramDict, prune
 
 MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
@@ -55,7 +55,7 @@ def makeScene(backColor, shapeDescList):
     im.save("scene.png")
 
     #Show scene
-    #call(["gnome-open","scene.png"])
+    call(["gnome-open","scene.png"])
 
     pass
 
@@ -96,5 +96,11 @@ if __name__ == "__main__":
     makeScene(bgc, shapeDescList)
 
     gramDict = getGramDict(bgc, shapeDescList)
-    gen(gramDict,shapeDescList)
+    f = open('trueStatements','w')
+    for tree in gen(gramDict,shapeDescList):
+        if processWords(tree.leaves(),bgc,shapeDescList):
+            f.write(' '.join(tree.leaves())+'\n')
+            pass
+        pass
+    f.close()
     #interface(bgc, shapeDescList)

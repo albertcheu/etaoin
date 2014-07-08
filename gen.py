@@ -2,7 +2,6 @@ QUOTE = "'"
 PIPE = "|"
 
 from copy import copy
-from os import listdir
 
 from nltk.tree import Tree
 
@@ -140,7 +139,7 @@ def gen(gramDict, shapeDescList):
             else: combos[production].append(Tree(production,[item]))
             pass
         pruneCombos(production, combos, shapeDescList)
-        print production, len(combos[production])
+        #print production, len(combos[production])
         pass
 
     return combos['S']
