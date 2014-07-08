@@ -96,11 +96,12 @@ if __name__ == "__main__":
     makeScene(bgc, shapeDescList)
 
     gramDict = getGramDict(bgc, shapeDescList)
-    f = open('trueStatements','w')
-    for tree in gen(gramDict,shapeDescList):
-        if processWords(tree.leaves(),bgc,shapeDescList):
-            f.write(' '.join(tree.leaves())+'\n')
-            pass
-        pass
-    f.close()
+    assertions = gen(gramDict,shapeDescList)
+    #f = open('trueStatements','w')
+    #for tree in assertions:
+    #if processWords(tree.leaves(),bgc,shapeDescList):
+    #f.write(' '.join(tree.leaves())+'\n')
+    #pass
+    #pass
+    #f.close()
     #interface(bgc, shapeDescList)

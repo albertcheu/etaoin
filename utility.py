@@ -60,10 +60,11 @@ def colorHistogram(winnowed):
 def satEnum(enumTree, winnowed, numSat):
     #Given the tree for ENUMSING/PLUR, a list of shapeDescs (wubbiwed), and the number of them that satisfy some condition (numSat), see if the number matches what the enum specifies
 
-    if not enumTree or (enumTree.node=='ENUMPLUR' and enumTree.leaves()==['the']):
-        return numSat > 0
+    if not enumTree: return numSat > 0
 
     enumWords = enumTree.leaves()
+
+    if enumTree.node=='ENUMPLUR' and enumWords == ['the']: return numSat > 1
 
     #Except for one/two/.., all X ...
     if 'except' in enumWords:

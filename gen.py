@@ -139,7 +139,7 @@ def gen(gramDict, shapeDescList):
             else: combos[production].append(Tree(production,[item]))
             pass
         pruneCombos(production, combos, shapeDescList)
-        #print production, len(combos[production])
+        print production, len(combos[production])
         pass
 
     return combos['S']
@@ -191,8 +191,15 @@ def pruneCombos(production, combos, shapeDescList):
     elif production in ('NPSING','NPPLUR'):
         newList = []
         f = filterByNPSING if production == 'NPSING' else filterByNPPLUR
+        enumLabel = 'ENUMSING' if production == 'NPSING' else 'ENUMPLUR'
         for tree in combos[production]:
-            if len(f(tree,shapeDescList,shapeDescList)) > 0:newList.append(tree)
+            filtered = f(tree,shapeDescList,shapeDescList)
+            enumTree = searchFirst(tree,enumLabel) if treeHas(tree,enumLabel) else None
+            numSat = len(filtered)
+            if enumTree and 'except' not in enumTree.leaves():
+                if satEnum(enumTree, filtered, numSat): newList.append(tree)
+                pass
+            elif numSat > 0: newList.append(tree)
             pass
         combos[production] = newList
         pass
