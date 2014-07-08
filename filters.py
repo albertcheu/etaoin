@@ -1,4 +1,3 @@
-from random import sample
 from constants import GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
 from utility import treeHas, searchTree, searchFirst, satEnum, adj, below, above, left, right
 
@@ -142,7 +141,7 @@ def handleAdjacent(winnowed):
     filtered = []
     while len(unvisited):
         cc = []
-        node = sample(unvisited,1)[0]
+        node = list(unvisited)[0]
         explore(winnowed, adjList, node, unvisited, cc)
         if len(cc) > 1: filtered += cc
         pass

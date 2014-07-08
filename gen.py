@@ -2,12 +2,13 @@ QUOTE = "'"
 PIPE = "|"
 
 from copy import copy
+from os import listdir
 
 from nltk.tree import Tree
 
 from constants import N,C,POLY,REVDEFNS, COLORS
 from utility import adj, left, right, above, below, treeHas,searchFirst,satEnum
-from filters import filterByCN, filterByPP
+from filters import filterByCN, filterByPP, filterByNPSING, filterByNPPLUR
 
 def getGramDict(bgc, shapeDescList):
     f = open("generativeGram.cfg")
@@ -113,8 +114,7 @@ def stitchPossibilities(production, item, combos):
         pass
     return ans
 
-#Makes the first n sentences from generativeGram.cfg
-def gen(gramDict, n, shapeDescList):
+def gen(gramDict, shapeDescList):
     #Map each production to all the possible expansions of terminals
     #combos = mapping of str (a production) to list of trees
     #each tree is a possible instance of the production
@@ -122,7 +122,7 @@ def gen(gramDict, n, shapeDescList):
     combos['S'] = []
     dag = buildDAG(gramDict, combos)
     print dag
-    for production in dag[:19]:
+    for production in dag:
         #Fill in combos[production]; guaranteed to have child productions!
         for item in gramDict[production]:
             #A sequence (i.e. C NSING)
@@ -139,12 +139,11 @@ def gen(gramDict, n, shapeDescList):
             #A terminal
             else: combos[production].append(Tree(production,[item]))
             pass
-        #print production, len(combos[production])
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
 
-    return combos
+    return combos['S']
 
 def pruneCombos(production, combos, shapeDescList):
     #post-pruning: eliminate combos of color and nouns that DNE
@@ -181,13 +180,20 @@ def pruneCombos(production, combos, shapeDescList):
             pass
         combos[production] = newList
         pass
-    elif production in ('PPS','PP'):
+    elif production == 'PPS':
         newList = []
-        print '--begin pp pruning'
         for tree in combos[production]:
             if len(filterByPP(Tree('PP',[tree]),shapeDescList,shapeDescList))>0:
                 newList.append(tree)
                 pass
+            pass
+        combos[production] = newList
+        pass
+    elif production in ('NPSING','NPPLUR'):
+        newList = []
+        f = filterByNPSING if production == 'NPSING' else filterByNPPLUR
+        for tree in combos[production]:
+            if len(f(tree,shapeDescList,shapeDescList)) > 0:newList.append(tree)
             pass
         combos[production] = newList
         pass
