@@ -194,7 +194,9 @@ def pruneCombos(production, combos, shapeDescList):
         enumLabel = 'ENUMSING' if production == 'NPSING' else 'ENUMPLUR'
         for tree in combos[production]:
             filtered = f(tree,shapeDescList,shapeDescList)
-            enumTree = searchFirst(tree,enumLabel) if treeHas(tree,enumLabel) else None
+            if treeHas(tree,enumLabel): enumTree = searchFirst(tree,enumLabel)
+            else: enumTree = None
+
             numSat = len(filtered)
             if enumTree and 'except' not in enumTree.leaves():
                 if satEnum(enumTree, filtered, numSat): newList.append(tree)

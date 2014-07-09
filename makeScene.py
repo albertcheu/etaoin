@@ -6,6 +6,7 @@ from random import randint, choice
 from polygon import *
 from subprocess import call
 from interface import interface,processWords
+from constants import YES
 from gen import gen, getGramDict, prune
 
 MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
@@ -109,8 +110,8 @@ if __name__ == "__main__":
             pass
 
         try:
-            x = processWords(tree.leaves(),bgc,shapeDescList)
-            if x: f.write(' '.join(tree.leaves())+'\n')
+            ans, assertion = processWords(tree.leaves(),bgc,shapeDescList)
+            if ans==YES: f.write(' '.join(tree.leaves())+'\n')
             pass
         except:
             print tree.leaves()

@@ -205,6 +205,7 @@ def handleBool(tree, words, shapeDescList, sing):
                 pass
             else:
                 #Do X have the same color (as each other)?
+                if len(filtered)==0: return NO
                 hist = colorHistogram(filtered)
                 col = hist.keys()[0]
                 numSat = countTrue(filtered, lambda sD: sD[C] == col)
@@ -228,7 +229,7 @@ def handleBool(tree, words, shapeDescList, sing):
             pass
         elif treeHas(tree, 'UNITE'):
             #Are X close to one another? (i.e. 5 X, all X)
-            numSat = len(handleClose(filtered))
+            numSat = len(handleAdjacent(filtered))
             return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif tree[-1].node == 'PP':

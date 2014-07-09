@@ -38,9 +38,9 @@ def parseInput(words, bgc, shapeDescList):
             pass
         #Answer the question
         ans = handleQuestion(tree, words, shapeDescList)
-        return ans == YES if a else ans
+        return ans, a
     #About background
-    return x == YES if a else x
+    return x, a
 
 def processWords(words, bgc, shapeDescList):
     for i in range(len(words)):
@@ -68,7 +68,7 @@ def interface(bgc, shapeDescList):
 
         #Work on the words
         words = q.split()
-        respond(processWords(words, bgc, shapeDescList))
-
+        ans, assertion = processWords(words, bgc, shapeDescList)
+        respond(ans)        
         pass
     pass

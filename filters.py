@@ -162,17 +162,21 @@ def filterByNPPLUR(tree, winnowed, shapeDescList):
     #black figures, octagons, yellow pentagons, etc.
     if 'NPPLUR1' in pluralNounPhrase:
         cn = searchFirst(pluralNounPhrase,'NPPLUR1SEC')
-        return filterByCN(cn.leaves(), winnowed)
+        sfiltered = set(filterByCN(cn.leaves(), winnowed))
+    else:
     #otherwise, X and Y
-    sfiltered = set()
-    npplur1sec = searchTree(pluralNounPhrase,'NPPLUR1SEC')
-    npsing = searchTree(pluralNounPhrase,'NPSING')
-    for subtree in npplur1sec:
-        sfiltered.update(set(filterByCN(subtree.leaves(),winnowed)))
+        sfiltered = set()
+        npplur1sec = searchTree(pluralNounPhrase,'NPPLUR1SEC')
+        npsing = searchTree(pluralNounPhrase,'NPSING')
+        for subtree in npplur1sec:
+            sfiltered.update(set(filterByCN(subtree.leaves(),winnowed)))
+            pass
+        for subtree in npsing:
+            sfiltered.update(set(filterByNPSING(subtree,winnowed,shapeDescList)))
+            pass
         pass
-    for subtree in npsing:
-        sfiltered.update(set(filterByNPSING(subtree,winnowed,shapeDescList)))
-        pass
+    #print sfiltered
     if treeHas(tree,'PP'): filtered = filterByPP(tree, list(sfiltered), shapeDescList)
     else: filtered = list(sfiltered)
+    #print filtered
     return filtered
