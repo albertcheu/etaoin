@@ -19,22 +19,28 @@ def parseInput(words, bgc, shapeDescList):
         print sys.exc_info()
         return
 
+    #Assertions are answered with bool
+    #Questions are answered with str
+
+    #If the sentence has 'background', the handler returns a string
+    #Otherwise, it returns False (bool)
+
     #Easiest type of question/assertion is about the background color
     x = handleBackground(bgc, tree)
+    a = treeHas(tree,'ASSERTION')
+    #Not about background
     if not x:
-        a = treeHas(tree,'ASSERTION')
         #Rephrase the sentence into a question
         if a:
             words = handleAssertion(searchFirst(tree,'ASSERTION'),
                                     words, shapeDescList)
             tree = PARSER.parse(words)
             pass
-
         #Answer the question
         ans = handleQuestion(tree, words, shapeDescList)
-        return ans if not a else ans == YES
-
-    return x
+        return ans == YES if a else ans
+    #About background
+    return x == YES if a else x
 
 def processWords(words, bgc, shapeDescList):
     for i in range(len(words)):

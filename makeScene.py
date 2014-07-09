@@ -94,14 +94,27 @@ if __name__ == "__main__":
         pass
 
     makeScene(bgc, shapeDescList)
-
+    
     gramDict = getGramDict(bgc, shapeDescList)
     assertions = gen(gramDict,shapeDescList)
-    #f = open('trueStatements','w')
-    #for tree in assertions:
-    #if processWords(tree.leaves(),bgc,shapeDescList):
-    #f.write(' '.join(tree.leaves())+'\n')
-    #pass
-    #pass
-    #f.close()
+    f = open('trueStatements','w')
+    whole = len(assertions)
+    nxt = 10
+    for i in range(whole):
+        tree = assertions[i]
+
+        if int(float(i)*100/whole) == nxt:
+            print nxt, 'percent done'
+            nxt += 10
+            pass
+
+        try:
+            x = processWords(tree.leaves(),bgc,shapeDescList)
+            if x: f.write(' '.join(tree.leaves())+'\n')
+            pass
+        except:
+            print tree.leaves()
+            break
+        pass
+    f.close()
     #interface(bgc, shapeDescList)

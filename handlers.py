@@ -9,8 +9,7 @@ def handleBackground(bgc, tree):
         if treeHas(tree, 'C'):
             tf = bgc in tree.leaves()
             return YES if tf else NO
-        if treeHas(tree, 'FETCHQ'): return bgc
-        return True
+        return bgc
     return False
 
 def handleAssertion(tree, words, shapeDescList):
@@ -245,7 +244,7 @@ def handleBool(tree, words, shapeDescList, sing):
             else: vnLabel,filterFunc,enumLabel='AREN',filterByNPPLUR,'ENUMPLUR'
 
             pnphrase = searchFirst(tree, vnLabel)[-1]
-            penumTree = searchFirst(pnphrase, enumLabel)
+            penumTree = searchFirst(pnphrase, enumLabel) if treeHas(pnphrase, enumLabel) else None
             pfiltered = filterFunc(pnphrase, shapeDescList, shapeDescList)
             numSat = len(filterFunc(nphrase, pfiltered, shapeDescList))
             return(YES if satEnum(penumTree, pfiltered, numSat) else NO)

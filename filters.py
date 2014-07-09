@@ -48,9 +48,7 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         d = mapByRelation(winnowed, rel, relRule)
 
         #Extract the enum, if any
-        if treeHas(nestedTree,label):
-            enumTree = searchFirst(nestedTree,label)
-            pass
+        if treeHas(nestedTree,label): enumTree = searchFirst(nestedTree,label)
         else: enumTree = None
 
         #Go thru each entry and compare against rel's ENUM
@@ -154,11 +152,9 @@ def filterByNPSING(tree, winnowed, shapeDescList):
     #C N | N
     nounSingTree = searchFirst(tree, 'NPSINGTERT')
     filtered = filterByCN(nounSingTree.leaves(), winnowed)
-    if len(filtered) > 1 and treeHas(nounTree, 'PP'):
-        filtered = filterByPP(searchFirst(nounTree,'PP'),
-                              filtered,shapeDescList)
+    if treeHas(nounTree, 'PP'):
+        filtered = filterByPP(searchFirst(nounTree,'PP'),filtered,shapeDescList)
         pass
-
     return filtered
 
 def filterByNPPLUR(tree, winnowed, shapeDescList):
