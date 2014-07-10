@@ -79,37 +79,60 @@ def stitchPossibilities(production, item, combos):
     #This function finds all possible combinations of the sequence it describes
     #Each production has possibilites, stored in combos[prod...]
 
-    def stitchRec(left, rightList):
+    def stitchRec(left, rightList, prod):
         #Left is either a list of Trees (an expanded nonterminal) or a str
         #rightList is a list of everything after left in 'item'
+        #prod is the top-level production that starts the recursion
 
         #Base case: bottom of recursion
         if len(rightList) == 0:
             if type(left) == str: return [[left]]
             return left
 
-        ans = stitchRec(rightList[0], rightList[1:])
+        ans = stitchRec(rightList[0], rightList[1:],prod)
         newAns = []
         for i in range(len(ans)):
             t = [ans[i]] if type(ans[i])==Tree else ans[i]
             if type(left) == str: newAns.append([left]+t)
-
             else:
-                for s in left: newAns.append([s]+t)
+                #Nip tautologies in the bud!
+                for s in left:
+                    if not tautology(s,t[-1],prod): newAns.append([s]+t)
+                    pass
                 pass
             pass
         return newAns
 
+    def tautology(leftTree,rightTree, prod):
+        #green X have the same color
+        if prod == 'ASSNCOL' and treeHas(leftTree,'C'): return True
+        #X near each other are near each other
+        if prod == 'ADJASSN' and treeHas(rightTree,'ADJACENT'): return True
+        #
+        if prod == 'BASICASSN':
+            #Green x are green
+            if rightTree.node=='C': return treeHas(leftTree,'C')
+            #
+            elif leftTree.node=='NASEC':return False
+            #X is/are polygon(s)
+            if treeHas(rightTree,'SPECIFICS') or treeHas(rightTree,'SPECIFICP'):
+                sing = leftTree.node=='NIS'
+                ls = searchFirst(leftTree, 'NPSINGTERT' if sing else 'NPPLUR1SEC')
+                rs = searchFirst(rightTree,'NPSINGTERT' if sing else 'NPPLUR1SEC')
+                return len(set(ls.leaves()) & set(rs.leaves())) > 0
+
+            return True
+
+        #A triangle has three sides
+        if prod == 'S':
+            if rightTree.node == 'SIDES': return treeHas(leftTree,'SPECIFICS')
+
+        return False
+
     l = list((combos[x] if x.isupper() else x) for x in item)
-    q = stitchRec(l[0], l[1:])
     ans = []
-    for possibility in q:
-        length = len(possibility)
-        skip = False
-        for i in range(length):
-            for j in range(i+1,length):
-                if possibility[i] == possibility[j]: skip = True
-        if not skip: ans.append(Tree(production,possibility))
+    for possibility in stitchRec(l[0], l[1:], production):
+        ans.append(Tree(production,possibility))
         pass
     return ans
 
@@ -170,7 +193,7 @@ def pruneCombos(production, combos, shapeDescList):
                 elif production == 'NPSINGSEC' and treeHas(tree,'ENUMSING'):
                     enumTree = searchFirst(tree,'ENUMSING')
                     pass
-                if satEnum(enumTree, filtered, shapeDescList):
+                if satEnum(enumTree, filtered, len(filtered)):
                     newList.append(tree)
                     pass
                 pass
