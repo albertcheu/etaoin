@@ -13,8 +13,8 @@
   -Space definitions (space.py)
     -left, right, top, bottom, corner, upper, lower, center, middle
 
-  -Image generation (makeScene.py, sceneInput; makes scene.png)
-    -The file sceneInput tells what the scene (initially) looks like
+  -Image generation (makeScene.py makes scene.png; polygon.py, space.py)
+    -The file passed into makeScene1(filename) tells what the scene looks like
     -It has format:
       -Background color
       -number of shapes
@@ -22,26 +22,27 @@
       -number of sides
       -Region of scene (0 is top left, 1 is top-center, ...8 is bottom right)
     -makeScene uses polygon.py to make the polygons, PIL to make the png
+    -makeScene1() returns the background color & shape description list
 
-  -Querying (makeScene, interface, handlers, filters, utility, constants)
-    -After creating the scene, makeScene presents a terminal interface
-    -The program parses English sentences and provides appropriate responses
+  -Querying (interface, handlers, filters, utility, constants, grammar.cfg)
+    -Presents a terminal interface
+    -English sentences and provides appropriate responses
     -constants.py & utility.py hold handy data elements and functions
+    -grammar.cfg describes the context-free grammar that is used
+
+  -Assertion generation (gen.py, generativeGram.cfg)
+    -Produces relevant statements about the scene
+    -generativeGram.cfg is a smaller variant of grammar.cfg; assertions only
+
+  -Main file (etta.py)
+    -Calls makeScene on sceneInput
+    -Generate assertions (pass in the bgc and shapeDescList to gen())
 
   -TO DO
-    -Instead of makeScene providing the interface, have a standalone .py
-      -This means representation is derived from .png, not from sceneInput
-      -analyzeScene.py is buggy :(
+    -Multiple sceneInputs
+      -Compare the output (assertions)
+      -Anything shared is a shared property!
 
     -Allow for natural language movement of the polygons
       -Would have to be a part of makeScene
-
-    -Generate natural language assertions about (the rep. of) the scene
-      -For simplicity, only positive assertions (no use of 'no' or 'not')
-      -In theory, if a true assertion is shared among multiple scenes, we have found a shared property
-      -How it's done:
-	-build the set of polygon colors
-	-build the set of polygon types
-	-build the set of global locations
-	-Make a copy of grammar.cfg with only those elements (& only assertions)
-	-Generate all assertions (!) and find the first N that are true (N=?)
+    -

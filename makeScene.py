@@ -1,14 +1,9 @@
-#!/usr/bin/python
+from random import randint, choice
+from subprocess import call
 
 from PIL import Image, ImageDraw
-from copy import copy
-from random import randint, choice
-from polygon import *
-from subprocess import call
-from interface import interface,processWords
-from constants import YES
-from gen import gen, getGramDict, prune
 
+from polygon import *
 MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
 
 #Min/max width & height of the screen
@@ -20,7 +15,7 @@ MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
 (MINBWIDTH, MINBHEIGHT) = (100, 100)
 (MAXBWIDTH, MAXBHEIGHT) = (120, 120)
 
-def makeScene(backColor, shapeDescList):
+def makeScene2(backColor, shapeDescList):
     (swidth,sheight) = (randint(MINSWIDTH,MAXSWIDTH),
                          randint(MINSHEIGHT,MAXSHEIGHT))
     
@@ -61,16 +56,15 @@ def makeScene(backColor, shapeDescList):
     pass
 
 
-if __name__ == "__main__":
+def makeScene1(fname):
+    f = open(fname)
+    lines = f.readlines()
+    f.close()
     #bgc
     #k
     #c_i
     #n_i
     #region_i
-    
-    f = open("sceneInput")
-    lines = f.readlines()
-    f.close()
     
     l = 0
     bgc = lines[l].strip()
@@ -94,28 +88,5 @@ if __name__ == "__main__":
         shapeDescList.append((n, symm, base, c, region))
         pass
 
-    makeScene(bgc, shapeDescList)
-    
-    gramDict = getGramDict(bgc, shapeDescList)
-    assertions = gen(gramDict,shapeDescList)
-    f = open('trueStatements','w')
-    whole = len(assertions)
-    nxt = 10
-    for i in range(whole):
-        tree = assertions[i]
-
-        if int(float(i)*100/whole) == nxt:
-            print nxt, 'percent done'
-            nxt += 10
-            pass
-
-        try:
-            ans, assertion = processWords(tree.leaves(),bgc,shapeDescList)
-            if ans==YES: f.write(' '.join(tree.leaves())+'\n')
-            pass
-        except:
-            print tree.leaves()
-            break
-        pass
-    f.close()
-    #interface(bgc, shapeDescList)
+    makeScene2(bgc, shapeDescList)
+    return bgc,shapeDescList
