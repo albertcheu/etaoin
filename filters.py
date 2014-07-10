@@ -33,6 +33,12 @@ def filterByPP(ppTree, winnowed, shapeDescList):
         #Simple case: global location (at the top of the screen, for example)
         ans = []
         loc = searchFirst(tree, 'GLOBALLOC').leaves()
+        #Icky edge case for generating trees
+        if ' ' in loc[-1]:
+            cornerLoc = loc[-1].split()
+            loc.pop()
+            loc += cornerLoc
+            pass
         for shapeDesc in winnowed:
             #Find all instances within winnowed whose self-description matches
             if shapeDesc[POLY].sameDesc(loc): ans.append(shapeDesc)

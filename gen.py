@@ -120,7 +120,6 @@ def gen(gramDict, shapeDescList):
     combos = {}
     combos['S'] = []
     dag = buildDAG(gramDict, combos)
-    print dag
     for production in dag:
         #Fill in combos[production]; guaranteed to have child productions!
         for item in gramDict[production]:
@@ -141,7 +140,6 @@ def gen(gramDict, shapeDescList):
         pruneCombos(production, combos, shapeDescList)
         print production, len(combos[production])
         pass
-
     return combos['S']
 
 def pruneCombos(production, combos, shapeDescList):
@@ -243,6 +241,10 @@ def prunePoly(gramDict, shapeDescList):
 def pruneGlobal(gramDict, shapeDescList):
     #Get rid of global locations
     globalLocs = ['center','top','top left','top right','left','right','bottom','bottom left','bottom right']
+    for i in range(len(gramDict['CORNERLOC'])):
+        gramDict['CORNERLOC'][i] = ' '. join(gramDict['CORNERLOC'][i])
+        pass
+
     for globalLoc in globalLocs:
         inList = False
         for shapeDesc in shapeDescList:
@@ -251,8 +253,8 @@ def pruneGlobal(gramDict, shapeDescList):
                 break
             pass
         if not inList:
-            if globalLoc.split() in gramDict['CORNERLOC']:
-                gramDict['CORNERLOC'].remove(globalLoc.split())
+            if globalLoc in gramDict['CORNERLOC']:
+                gramDict['CORNERLOC'].remove(globalLoc)
                 pass
             elif globalLoc in gramDict['HORIZ']:
                 gramDict['HORIZ'].remove(globalLoc)
@@ -261,9 +263,6 @@ def pruneGlobal(gramDict, shapeDescList):
                 gramDict['VERT'].remove(globalLoc)
                 pass
             else: gramDict['GLOBALLOC'].remove(globalLoc)
-        pass
-    for i in range(len(gramDict['CORNERLOC'])):
-        gramDict['CORNERLOC'][i] = ' '. join(gramDict['CORNERLOC'][i])
         pass
     for loc in ('CORNERLOC','HORIZ','VERT'):
         if len(gramDict[loc]) == 0:
