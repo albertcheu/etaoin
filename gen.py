@@ -95,9 +95,10 @@ def stitchPossibilities(production, item, combos):
             t = [ans[i]] if type(ans[i])==Tree else ans[i]
             if type(left) == str: newAns.append([left]+t)
             else:
-                #Nip tautologies in the bud!
+                #Nip tautologies in the bud! Also, don't say strange things
                 for s in left:
-                    if not tautology(s,t[-1],prod): newAns.append([s]+t)
+                    if not (tautology(s,t[-1],prod) or badGram(s,t[-1],prod)):
+                        newAns.append([s]+t)
                     pass
                 pass
             pass
@@ -114,19 +115,39 @@ def stitchPossibilities(production, item, combos):
             if rightTree.node=='C': return treeHas(leftTree,'C')
             #
             elif leftTree.node=='NASEC':return False
-            #X is/are polygon(s)
             if treeHas(rightTree,'SPECIFICS') or treeHas(rightTree,'SPECIFICP'):
-                sing = leftTree.node=='NIS'
-                ls = searchFirst(leftTree, 'NPSINGTERT' if sing else 'NPPLUR1SEC')
-                rs = searchFirst(rightTree,'NPSINGTERT' if sing else 'NPPLUR1SEC')
+                #x triangle is a triangle
+                label = 'NPSINGTERT' if leftTree.node=='NIS' else 'NPPLUR1SEC'
+                ls = searchFirst(leftTree, label)
+                rs = searchFirst(rightTree, label)
                 return len(set(ls.leaves()) & set(rs.leaves())) > 0
-
+            #X is/are polygon(s)
             return True
 
         #A triangle has three sides
         if prod == 'S':
             if rightTree.node == 'SIDES': return treeHas(leftTree,'SPECIFICS')
-
+        return False
+    def badGram(leftTree,rightTree,prod):
+        if prod == 'BASICASSN':
+            leftWord,rightWord = leftTree.leaves()[0],rightTree.leaves()[0]
+            if treeHas(rightTree,'ENUMSING') or treeHas(rightTree,'ENUMPLUR'):
+                #X is each Y
+                #The figures at the left are all/except... X
+                for tabooWord in ('one','each','all','except'):
+                    if tabooWord == rightWord: return True
+                    pass
+                return 'the' == rightWord and 'the' != leftWord
+                pass
+            pass
+        elif prod == 'S' and leftTree.node=='THERE':
+            #There are (the X / all X / except for N all X)
+            if treeHas(rightTree,'ENUMPLUR'):
+                return not treeHas(rightTree, 'NUM')
+            #There is (the X / each X)
+            elif treeHas(rightTree,'ENUMSING'):
+                return treeHas(rightTree, 'THE') or treeHas(rightTree, 'EACH')
+            pass
         return False
 
     l = list((combos[x] if x.isupper() else x) for x in item)
@@ -212,17 +233,16 @@ def pruneCombos(production, combos, shapeDescList):
     elif production in ('NPSING','NPPLUR'):
         newList = []
         f = filterByNPSING if production == 'NPSING' else filterByNPPLUR
+        cnLabel = 'NPSINGTERT' if production == 'NPSING' else 'NPPLUR1SEC'
         enumLabel = 'ENUMSING' if production == 'NPSING' else 'ENUMPLUR'
         for tree in combos[production]:
-            filtered = f(tree,shapeDescList,shapeDescList)
             if treeHas(tree,enumLabel): enumTree = searchFirst(tree,enumLabel)
             else: enumTree = None
-
-            numSat = len(filtered)
-            if enumTree and 'except' not in enumTree.leaves():
-                if satEnum(enumTree, filtered, numSat): newList.append(tree)
-                pass
-            elif numSat > 0: newList.append(tree)
+            cn = searchFirst(tree,cnLabel).leaves()
+            filtered = filterByCN(cn,shapeDescList)
+            ns = f(tree,shapeDescList,shapeDescList)
+            numSat = len(ns)
+            if satEnum(enumTree, filtered, numSat): newList.append(tree)
             pass
         combos[production] = newList
         pass
