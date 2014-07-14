@@ -57,11 +57,9 @@ def satEnum(enumTree, winnowed, numSat):
 
     enumWords = enumTree.leaves()
 
-    #The triangles at the left (a subset of all the triangles, of size > 1)
-    if enumTree.node=='ENUMPLUR' and enumWords == ['the']: return numSat > 1
-
     #The black polygon (exactly one figure should match)
-    if enumTree.node=='ENUMSING' and enumWords == ['the']: return numSat == 1
+    if enumTree.node=='ENUMSING' and enumWords == ['the']:
+        return numSat == 1 and len(winnowed) == 1
 
     #Except for one/two/.., all X ...
     if 'except' in enumWords:
@@ -70,12 +68,9 @@ def satEnum(enumTree, winnowed, numSat):
     #there are three polygons
     if treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
 
-    #all other triangles; assumes the subject is singular
-    #Technically wrong but fix later
-    #if 'other' in enumWords: return numSat == len(winnowed)-1
-
-    #all/every/each shape(s)
-    if enumWords[0] in ('all','every','each'): return numSat == len(winnowed)
+    #the/all/every/each shape(s)
+    if enumWords[0] in ('all','every','each','the'):
+        return numSat > 0 and numSat == len(winnowed)
 
     #Not all
     if 'not' in enumWords: return numSat != len(winnowed)
@@ -86,4 +81,4 @@ def satEnum(enumTree, winnowed, numSat):
     if enumWords == ['one']: return numSat == 1
 
     #a/an shape
-    return numSat >= 1
+    return numSat > 0

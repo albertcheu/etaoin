@@ -232,15 +232,12 @@ def pruneCombos(production, combos, shapeDescList):
     elif production in ('NPSING','NPPLUR'):
         newList = []
         f = filterByNPSING if production == 'NPSING' else filterByNPPLUR
-        cnLabel = 'NPSINGTERT' if production == 'NPSING' else 'NPPLUR1SEC'
         enumLabel = 'ENUMSING' if production == 'NPSING' else 'ENUMPLUR'
         for tree in combos[production]:
             if treeHas(tree,enumLabel): enumTree = searchFirst(tree,enumLabel)
             else: enumTree = None
-            cn = searchFirst(tree,cnLabel).leaves()
-            filtered = filterByCN(cn,shapeDescList)
-            ns = f(tree,shapeDescList,shapeDescList)
-            numSat = len(ns)
+            filtered = f(tree,shapeDescList,shapeDescList)
+            numSat = len(filtered)
             if satEnum(enumTree, filtered, numSat): newList.append(tree)
             pass
         combos[production] = newList
