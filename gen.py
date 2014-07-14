@@ -134,7 +134,7 @@ def stitchPossibilities(production, item, combos):
             if treeHas(rightTree,'ENUMSING') or treeHas(rightTree,'ENUMPLUR'):
                 #X is each Y
                 #The figures at the left are all/except... X
-                for tabooWord in ('one','each','all','except'):
+                for tabooWord in ('one','all','except'):
                     if tabooWord == rightWord: return True
                     pass
                 return 'the' == rightWord and 'the' != leftWord
@@ -145,8 +145,7 @@ def stitchPossibilities(production, item, combos):
             if treeHas(rightTree,'ENUMPLUR'):
                 return not treeHas(rightTree, 'NUM')
             #There is (the X / each X)
-            elif treeHas(rightTree,'ENUMSING'):
-                return treeHas(rightTree, 'THE') or treeHas(rightTree, 'EACH')
+            elif treeHas(rightTree,'ENUMSING'): return treeHas(rightTree, 'THE')
             pass
         return False
 
