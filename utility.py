@@ -57,28 +57,30 @@ def satEnum(enumTree, winnowed, numSat):
 
     enumWords = enumTree.leaves()
 
-    #The black polygon (exactly one figure should match)
+    #The black polygon is at the right
+    #There must be exactly 1 black polygon and it must be at the right
     if enumTree.node=='ENUMSING' and enumWords == ['the']:
         return numSat == 1 and len(winnowed) == 1
 
-    #Except for one/two/.., all X ...
-    if 'except' in enumWords:
+    #Except for one/two/.., all X are Y
+    #Find the no. of X (len(winnowed)), and the no. of X that are Y (numSat)
+    elif 'except' in enumWords:
         return numSat == len(winnowed) - SNUM[enumWords[-2]]
 
     #there are three polygons
-    if treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
+    elif treeHas(enumTree, 'NUM'): return SNUM[enumWords[-1]] == numSat
 
-    #the/all/every/each shape(s)
-    if enumWords[0] in ('all','every','each','the'):
-        return numSat > 0 and numSat == len(winnowed)
+    #the quadrilaterals (i.e. all quadrilaterals)
+    #Should be a positive number of them
+    elif enumWords == ['the']: return numSat > 0 and numSat == len(winnowed)
 
     #Not all
-    if 'not' in enumWords: return numSat != len(winnowed)
+    elif 'not' in enumWords: return numSat != len(winnowed)
 
-    #No X are Y
-    if enumWords == ['no']: return numSat == 0
+    #No X are Y; number of X that are Y is 0
+    elif enumWords == ['no']: return numSat == 0
 
-    if enumWords == ['one']: return numSat == 1
+    elif enumWords == ['one']: return numSat == 1
 
-    #a/an shape
+    #an X; positive number of X
     return numSat > 0

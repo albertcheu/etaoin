@@ -273,8 +273,8 @@ def prunePoly(gramDict, shapeDescList):
             gramDict['SPECIFICP'].remove(polyType+'s')
             pass
         pass
-    if len(gramDict['SPECIFICS'])==0:gramDict.remove('SPECIFICS')
-    if len(gramDict['SPECIFICP'])==0:gramDict.remove('SPECIFICP')
+    if len(gramDict['SPECIFICS'])==0:del gramDict['SPECIFICS']
+    if len(gramDict['SPECIFICP'])==0:del gramDict['SPECIFICP']
     pass
 
 def pruneGlobal(gramDict, shapeDescList):
@@ -305,11 +305,11 @@ def pruneGlobal(gramDict, shapeDescList):
         pass
     for loc in ('CORNERLOC','HORIZ','VERT'):
         if len(gramDict[loc]) == 0:
-            gramDict.remove(loc)
+            del gramDict[loc]
             gramDict['GLOBALLOC'].remove(loc)
             pass
         pass
-    if len(gramDict['GLOBALLOC'])==0: gramDict.remove('GLOBALLOC')
+    if len(gramDict['GLOBALLOC'])==0: del gramDict['GLOBALLOC']
     pass
 
 def pruneAdj(gramDict, shapeDescList):
@@ -340,10 +340,10 @@ def pruneAdj(gramDict, shapeDescList):
         if haveAdj: break
         pass
     if not haveAdj:
-        gramDict.remove('ADJASSN')
-        gramDict.remove('P2')
-        gramDict.remove('ADJACENT')
-        gramDict.remove('CARDINAL')
+        del gramDict['ADJASSN']
+        del gramDict['P2']
+        del gramDict['ADJACENT']
+        del gramDict['CARDINAL']
         gramDict['ASSERTION'].pop()
         gramDict['PPS'].pop()
         pass

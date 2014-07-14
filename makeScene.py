@@ -15,12 +15,12 @@ MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
 (MINBWIDTH, MINBHEIGHT) = (100, 100)
 (MAXBWIDTH, MAXBHEIGHT) = (120, 120)
 
-def makeScene2(backColor, shapeDescList):
+def makeScene2(bgc, shapeDescList, fname):
     (swidth,sheight) = (randint(MINSWIDTH,MAXSWIDTH),
                          randint(MINSHEIGHT,MAXSHEIGHT))
     
     #Make our "canvas", an image file
-    im = Image.new("RGB", (swidth,sheight), backColor)
+    im = Image.new("RGB", (swidth,sheight), bgc)
     draw = ImageDraw.Draw(im)
 
     (xthird, ythird) = (swidth / 3, sheight / 3)
@@ -48,10 +48,10 @@ def makeScene2(backColor, shapeDescList):
         pass
 
     #Save scene
-    im.save("scene.png")
+    im.save(fname+'.png')
 
     #Show scene
-    call(["gnome-open","scene.png"])
+    #call(["gnome-open",fname+'.png'])
 
     pass
 
@@ -88,5 +88,5 @@ def makeScene1(fname):
         shapeDescList.append((n, symm, base, c, region))
         pass
 
-    makeScene2(bgc, shapeDescList)
+    makeScene2(bgc, shapeDescList, fname)
     return bgc,shapeDescList
