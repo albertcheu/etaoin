@@ -25,8 +25,7 @@
     -makeScene1() returns the background color & shape description list
 
   -Querying (interface, handlers, filters, utility, constants, grammar.cfg)
-    -Presents a terminal interface
-    -English sentences and provides appropriate responses
+    -processes English sentences and provides appropriate responses
     -constants.py & utility.py hold handy data elements and functions
     -grammar.cfg describes the context-free grammar that is used
 
@@ -37,12 +36,18 @@
   -Main file (etta.py)
     -Calls makeScene on sceneInput
     -Generate assertions (pass in the bgc and shapeDescList to gen())
+    -Check each assertion using the function processWords from interface.py
+    -If it is True for 'good' and False for 'bad' files, write to 'sharedTruths'
 
   -TO DO
-    -Multiple sceneInputs
-      -Compare the output (assertions)
-      -Anything shared is a shared property!
-
-    -Allow for natural language movement of the polygons
-      -Would have to be a part of makeScene
-    -
+    -GUI to input background color, polygon color and location
+      -It is tedious to enter good(1-6) and bad(1-6) manually!
+      -Select bgc, no. of objects
+      -Nine slots. Each slot has color, no. sides, and location drop-down menu
+      -Select button at bottom
+        -If there is an error, raise a prompt window and do not exit
+	  -Errors: two objects in same region, object same color as bgc
+	  -Also, number of complete entries doesn't match entered number
+        -Otherwise, pass the values into makeScene1()
+    -Make analyzeScene work: produce bgc, shapeDescList from png alone
+    -Find way to move the polygons, "untethering" them from the sceneInputs
