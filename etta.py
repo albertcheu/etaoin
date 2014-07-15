@@ -20,16 +20,16 @@ def complexity(shapeDescList):
 
 def getSDLs(label):
     #List of the shapeDescLists (technically, sDL's are tuples but who cares)
-    metaList = []
+    sdlList = []
     minComplexity,mindex = 1000,-1
     for i in range(1,7):
         fname = 'sceneInputs/%s%d'%(label,i)
         bgc,shapeDescList = makeScene1(fname)
-        metaList.append((bgc,shapeDescList))
+        sdlList.append((bgc,shapeDescList))
         c = complexity(shapeDescList)
         if c < minComplexity: minComplexity,mindex = c, i-1
         pass
-    return metaList, mindex
+    return sdlList, mindex
 
 def getTrueStatements(bgc, shapeDescList):
     gramDict = getGramDict(bgc, shapeDescList)
@@ -59,16 +59,16 @@ def getTrueStatements(bgc, shapeDescList):
     #interface(bgc, shapeDescList)
     pass
 
-def getSharedTruths(metaList):
-    def matchExpected(sdls, expected):
+def getSharedTruths(goodList):
+    def matchExpected(sdlList, expected):
         for i in range(6):
-            bgc, shapeDescList = sdls[i]
+            bgc, shapeDescList = sdlList[i]
             ans, assertion = processWords(words, bgc, shapeDescList)
             if ans != expected: return False
             pass
         return True
 
-    otherList, ignoreThisVar = getSDLs('bad')
+    badList, ignoreThisVar = getSDLs('bad')
 
     f = open('trueStatements')
     lines = f.readlines()
@@ -76,21 +76,21 @@ def getSharedTruths(metaList):
     sharedTruths = []
     for line in lines:
         words = line.strip().split()
-        if matchExpected(metaList, YES) and matchExpected(otherList, NO):
+        if matchExpected(goodList, YES) and matchExpected(badList, NO):
             sharedTruths.append(line)
             pass
         pass
     return sharedTruths
 
 if __name__ == "__main__":
-    metaList, mindex = getSDLs('good')
+    goodList, mindex = getSDLs('good')
 
     print 'We shall generate true statements about good%d'%(mindex+1)
-    bgc,shapeDescList = metaList[mindex]
+    bgc,shapeDescList = goodList[mindex]
     getTrueStatements(bgc, shapeDescList)
 
     print 'How many are true for all six "good" images and false for all "bad"?'
-    sharedTruths = getSharedTruths(metaList)
+    sharedTruths = getSharedTruths(goodList)
     print len(sharedTruths)
 
     f = open('trueStatements','w')
