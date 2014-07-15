@@ -8,19 +8,20 @@ from makeScene import makeScene1
 
 #This file is what shall be called in the command-line
 
-def complexity(shapeDescList):
-    #Give a score of how complicated it is to describe the scene
-    numFigures = len(shapeDescList)
-    colorSet,typeSet = set(),set()
-    for sD in shapeDescList:
-        colorSet.add(sD[C])
-        typeSet.add(sD[N])
-        pass
-    return numFigures+len(colorSet)+len(typeSet)
-
 def getSDLs(label):
-    #List of the shapeDescLists (technically, sDL's are tuples but who cares)
+    #label = 'good' or 'bad', the prefix of the filename in sceneInputs
+    def complexity(shapeDescList):
+    #Give a score of how complicated it is to describe the scene
+        numFigures = len(shapeDescList)
+        colorSet,typeSet = set(),set()
+        for sD in shapeDescList:
+            colorSet.add(sD[C])
+            typeSet.add(sD[N])
+            pass
+        return numFigures+len(colorSet)+len(typeSet)
+
     sdlList = []
+    #The 'complexity' of the simplest scene, the index of the simplest scene
     minComplexity,mindex = 1000,-1
     for i in range(1,7):
         fname = 'sceneInputs/%s%d'%(label,i)
@@ -32,51 +33,47 @@ def getSDLs(label):
     return sdlList, mindex
 
 def getTrueStatements(bgc, shapeDescList):
+    #Build dictionary representation of the grammar
     gramDict = getGramDict(bgc, shapeDescList)
+    #Use that grammar to make assertions about the scene (as rep. by the sDL)
     assertions = gen(gramDict,shapeDescList)
-    f = open('trueStatements','w')
-    whole = len(assertions)
-    nxt,numTrue = 10,0
+    #Get ready for the loop
+    trueStatements,whole,nxt = [], len(assertions), 10
     for i in range(whole):
         tree = assertions[i]
+        #Tell progress, as a percentage
         if int(float(i)*100/whole) == nxt:
             print nxt, 'percent of assertions processed'
             nxt += 10
             pass
         try:
-            ans, assertion = processWords(tree.leaves(),bgc,shapeDescList)
-            if ans==YES:
-                f.write(' '.join(tree.leaves())+'\n')
-                numTrue += 1
-                pass
+            #Check each assertion if it is true
+            #Only fetch the result we need, not the 'assertion' bool result
+            ans = processWords(tree.leaves(),bgc,shapeDescList)[0]
+            if ans == YES: trueStatements.append(' '.join(tree.leaves())+'\n')
             pass
         except:
             print tree.leaves()
             break
         pass
-    f.close()
-    print 'There are',numTrue,'true assertions'
-    #interface(bgc, shapeDescList)
-    pass
+    return trueStatements
 
-def getSharedTruths(goodList):
-    def matchExpected(sdlList, expected):
+def getSharedTruths(goodList, trueStatements):
+    def match(words, sdlList, expected):
+        #Do the words make up an assertion whose boolean value matches expected?
         for i in range(6):
             bgc, shapeDescList = sdlList[i]
-            ans, assertion = processWords(words, bgc, shapeDescList)
+            #Only fetch the result we need, not the 'assertion' bool result
+            ans = processWords(words, bgc, shapeDescList)[0]
             if ans != expected: return False
             pass
         return True
-
-    badList, ignoreThisVar = getSDLs('bad')
-
-    f = open('trueStatements')
-    lines = f.readlines()
-    f.close()
+    #Don't need to know the mindex of the bad pictures
+    badList = getSDLs('bad')[0]
     sharedTruths = []
-    for line in lines:
+    for line in trueStatements:
         words = line.strip().split()
-        if matchExpected(goodList, YES) and matchExpected(badList, NO):
+        if match(words,goodList,YES) and match(words,badList,NO):
             sharedTruths.append(line)
             pass
         pass
@@ -86,14 +83,17 @@ if __name__ == "__main__":
     goodList, mindex = getSDLs('good')
 
     print 'We shall generate true statements about good%d'%(mindex+1)
+    #Background color and list of shape descriptors from the simplest scene
     bgc,shapeDescList = goodList[mindex]
-    getTrueStatements(bgc, shapeDescList)
+    #Find assertions about the simplest scene
+    trueStatements = getTrueStatements(bgc, shapeDescList)
+    print 'There are',len(trueStatements),'true assertions'
 
     print 'How many are true for all six "good" images and false for all "bad"?'
-    sharedTruths = getSharedTruths(goodList)
+    sharedTruths = getSharedTruths(goodList,trueStatements)
     print len(sharedTruths)
 
-    f = open('trueStatements','w')
+    f = open('sharedTruths','w')
     f.writelines(sharedTruths)
     f.close()
     pass
