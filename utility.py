@@ -1,6 +1,6 @@
 from Queue import Queue
 from math import sqrt
-from constants import N, SYMM, BASE, C, REGION, POLY, SNUM, PADDING
+from constants import N, C, POLY, SNUM, PADDING
 def dist(a,b): return sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
 def avg(a,b): return (a+b)/2.0
 

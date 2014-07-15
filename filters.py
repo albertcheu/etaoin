@@ -1,4 +1,4 @@
-from constants import GENERICS, REVDEFNS, N, SYMM, BASE, C, REGION, POLY, SNUM
+from constants import GENERICS, REVDEFNS, N, C, POLY, SNUM
 from utility import treeHas, searchTree, searchFirst, satEnum, adj, below, above, left, right
 
 def filterByCN(cn, shapeDescList):

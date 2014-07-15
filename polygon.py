@@ -174,7 +174,7 @@ def inPoly(x, y, pts):
         pass
     return True
 
-class BoundingBox():
+class Polygon():
     def __init__(self, pts, swidth, sheight):
         self.pts = pts
         self.swidth, self.sheight = swidth, sheight

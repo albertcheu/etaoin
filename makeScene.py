@@ -33,7 +33,7 @@ def makeScene2(bgc, shapeDescList, fname):
                              randint(MINBHEIGHT,MAXBHEIGHT))
         maker = MAKERS[n]
         pts = maker(symm, base, 0,bwidth,0,bheight)
-        polygon = BoundingBox(pts, swidth, sheight)
+        polygon = Polygon(pts, swidth, sheight)
         polygon.translate(-1*polygon.minX, -1*polygon.minY)
 
         #Center the polygon in the region
@@ -44,7 +44,7 @@ def makeScene2(bgc, shapeDescList, fname):
         print polygon.width, polygon.height, polygon.pts
         draw.polygon(polygon.pts, c)
 
-        shapeDescList[i] = (n, symm, base, c, region, polygon)
+        shapeDescList[i] = (n, symm, base, c, polygon)
         pass
 
     #Save scene

@@ -1,5 +1,5 @@
 REASK = "I couldn't parse that...Could you rephrase or say something else?"
-(N, SYMM, BASE, C, REGION, POLY) = (0,1,2,3,4,5)
+(N, SYMM, BASE, C, POLY) = (0,1,2,3,4)
 GENERICS = ('polygon', 'shape', 'figure', 'object')
 MINFRACTION = 7
 PADDING = 20
