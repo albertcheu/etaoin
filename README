@@ -33,21 +33,24 @@
     -Produces relevant statements about the scene
     -generativeGram.cfg is a smaller variant of grammar.cfg; assertions only
 
+  -testGUI.py
+    -Lets me input what is in the good and bad scenes
+    -Dropdown menu for background color
+    -For each of the 9 regions of the screen, we have dropdown menus for color and number of sides. If left blank, there is no figure there.
+
   -Main file (etta.py)
-    -Calls makeScene on sceneInput
+    -Calls makeScene on simplest good scene in sceneInputs
     -Generate assertions (pass in the bgc and shapeDescList to gen())
     -Check each assertion using the function processWords from interface.py
     -If it is True for 'good' and False for 'bad' files, write to 'sharedTruths'
 
+
   -TO DO
-    -GUI to input background color, polygon color and location
-      -It is tedious to enter good(1-6) and bad(1-6) manually!
-      -Select bgc, no. of objects
-      -Nine slots. Each slot has color, no. sides, and location drop-down menu
-      -Select button at bottom
-        -If there is an error, raise a prompt window and do not exit
-	  -Errors: two objects in same region, object same color as bgc
-	  -Also, number of complete entries doesn't match entered number
-        -Otherwise, pass the values into makeScene1()
+    -GUI for etta: present 2 options: make new problem or solve old one
+      -make new problem = testGUI
+      -solve old one =
+        -Present images to user
+	-Run present etta code on the corresponding set of shapeDescLists
+
     -Make analyzeScene work: produce bgc, shapeDescList from png alone
     -Find way to move the polygons, "untethering" them from the sceneInputs
