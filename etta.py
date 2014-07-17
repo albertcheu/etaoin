@@ -1,99 +1,173 @@
 #!/usr/bin/python
+from random import choice
+from os import listdir
+from subprocess import call
 
-from gen import gen, getGramDict
-from interface import interface,processWords
-from constants import YES, NO, C, N
+import wx
 
-from makeScene import makeScene1
+from constants import COLORS, DEFNS
+from analysis import analyzeProblemSet
 
-#This file is what shall be called in the command-line
+sideOptions = map(str, sorted(DEFNS.keys()) )
 
-def getSDLs(label):
-    #label = 'good' or 'bad', the prefix of the filename in sceneInputs
-    def complexity(shapeDescList):
-    #Give a score of how complicated it is to describe the scene
-        numFigures = len(shapeDescList)
-        colorSet,typeSet = set(),set()
-        for sD in shapeDescList:
-            colorSet.add(sD[C])
-            typeSet.add(sD[N])
-            pass
-        return numFigures+len(colorSet)+len(typeSet)
+def drawLines(panel,flagSet,vsizer):
+    #Aesthetics
+    vsizer.Add(wx.StaticLine(panel), flag=wx.EXPAND|flagSet, border=5)
+    vsizer.Add(wx.StaticLine(panel), flag=wx.EXPAND|flagSet, border=2)
+    pass
 
-    sdlList = []
-    #The 'complexity' of the simplest scene, the index of the simplest scene
-    minComplexity,mindex = 1000,-1
-    for i in range(1,7):
-        fname = 'sceneInputs/%s%d'%(label,i)
-        bgc,shapeDescList = makeScene1(fname)
-        sdlList.append((bgc,shapeDescList))
-        c = complexity(shapeDescList)
-        if c < minComplexity: minComplexity,mindex = c, i-1
+class SceneInput(wx.Frame):
+    def __init__(self, *args, **kwargs):
+        super(SceneInput, self).__init__(*args, **kwargs)
+        panel = wx.Panel(self)
+        flagSet = wx.LEFT|wx.TOP
+        
+        vsizer = wx.BoxSizer(wx.VERTICAL)
+        vsizer.Add(self.makeTop(panel, flagSet),flag=wx.ALIGN_CENTER)
+        drawLines(panel, flagSet, vsizer)
+
+        vsizer.Add(self.makeGrid(panel, flagSet), flag=flagSet,border=10)
+        drawLines(panel, flagSet, vsizer)
+
+        self.submit = wx.Button(panel,label='Submit!')
+        self.submit.Bind(wx.EVT_BUTTON, self.submitForm)
+        vsizer.Add(self.submit,flag=wx.ALIGN_CENTER|wx.TOP, border=5)
+        panel.SetSizer(vsizer)
+
+        self.Centre()
+        self.Show()
         pass
-    return sdlList, mindex
 
-def getTrueStatements(bgc, shapeDescList):
-    #Build dictionary representation of the grammar
-    gramDict = getGramDict(bgc, shapeDescList)
-    #Use that grammar to make assertions about the scene (as rep. by the sDL)
-    assertions = gen(gramDict,shapeDescList)
-    #Get ready for the loop
-    trueStatements,whole,nxt = [], len(assertions), 10
-    for i in range(whole):
-        tree = assertions[i]
-        #Tell progress, as a percentage
-        if int(float(i)*100/whole) == nxt:
-            print nxt, 'percent of assertions processed'
-            nxt += 10
+    def makeTop(self, panel, flagSet):
+        bgcText = wx.StaticText(panel,label='Background Color:')
+        self.bgcSelect = wx.ComboBox(panel,choices=COLORS, style=wx.CB_READONLY)
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer.Add(bgcText, flag=flagSet, border = 10)
+        hsizer.Add(self.bgcSelect,flag=flagSet, border = 5)    
+        return hsizer
+
+    def makeGrid(self, panel, flagSet):
+        gs = wx.GridSizer(3,3,5,5)
+        regions = ('Top-left','Top','Top-right','Left','Center',
+                   'Right','Bottom-left','Bottom','Bottom-right')
+        self.colorList, self.sideList = [],[]
+        for r in regions:
+            regionLabel = wx.StaticText(panel,label=r,style=wx.ALIGN_CENTRE)
+            colorChoice = wx.ComboBox(panel,value='Select color',choices=COLORS,style=wx.CB_READONLY)
+            self.colorList.append(colorChoice)
+            sideChoice = wx.ComboBox(panel,value='Select no. sides',choices=sideOptions,style=wx.CB_READONLY)
+            self.sideList.append(sideChoice)
+
+            vsizer2 = wx.BoxSizer(wx.VERTICAL)
+            vsizer2.AddMany((regionLabel,colorChoice,sideChoice))
+            gs.Add(vsizer2)
             pass
-        try:
-            #Check each assertion if it is true
-            #Only fetch the result we need, not the 'assertion' bool result
-            ans = processWords(tree.leaves(),bgc,shapeDescList)[0]
-            if ans == YES: trueStatements.append(' '.join(tree.leaves())+'\n')
+        return gs
+
+    def saveLabel(self, label): self.label = label
+
+    def submitForm(self, eventThing):
+        bgc = str(self.bgcSelect.GetValue())
+        shapeDescList = []
+        for i in range(9):
+            #uc = unicode color
+            uc,n = self.colorList[i].GetValue(),self.sideList[i].GetValue()
+            if uc in COLORS and n in sideOptions:
+                shapeDescList.append((str(uc), n, i))
+                pass
             pass
-        except:
-            print tree.leaves()
-            break
+        if bgc in COLORS and len(shapeDescList) > 0:
+            f = open(self.label,'w')
+            f.write(bgc+'\n'+str(len(shapeDescList))+'\n')
+            for (c,n,i) in shapeDescList: f.write(c+'\n'+n+'\n'+str(i)+'\n')
+            f.close()
+            self.Close(True)
+            pass
         pass
-    return trueStatements
 
-def getSharedTruths(goodList, trueStatements):
-    def match(words, sdlList, expected):
-        #Do the words make up an assertion whose boolean value matches expected?
-        for i in range(6):
-            bgc, shapeDescList = sdlList[i]
-            #Only fetch the result we need, not the 'assertion' bool result
-            ans = processWords(words, bgc, shapeDescList)[0]
-            if ans != expected: return False
-            pass
-        return True
-    #Don't need to know the mindex of the bad pictures
-    badList = getSDLs('bad')[0]
-    sharedTruths = []
-    for line in trueStatements:
-        words = line.strip().split()
-        if match(words,goodList,YES) and match(words,badList,NO):
-            sharedTruths.append(line)
-            pass
+    pass
+
+def creationGUI(label):
+    #label = good1..6, bad1..6
+    app = wx.App()
+    styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
+    si = SceneInput(None, size=(600,350), title=label, style=styleSet)
+    si.saveLabel(label)
+    app.MainLoop()
+    pass
+
+class Start(wx.Frame):
+    def __init__(self, *args, **kwargs):
+        super(Start, self).__init__(*args, **kwargs)
+        panel = wx.Panel(self)
+
+        self.make = wx.RadioButton(panel,label='Make a problem set',
+                                   style=wx.RB_GROUP)
+        self.delete = wx.RadioButton(panel,label='Delete a problem set')
+        self.analyze = wx.RadioButton(panel,label='Analyze a problem set')
+        self.fnames = wx.ComboBox(panel,choices=listdir('sceneInputs/'),
+                                  style=wx.CB_READONLY,value='Problem set...')
+        self.select = wx.Button(panel, label='Next')
+        self.select.Bind(wx.EVT_BUTTON, self.nxt)
+
+        szr = wx.BoxSizer(wx.VERTICAL)
+        szr.AddMany((self.make,self.delete,self.analyze,self.fnames,self.select))
+        panel.SetSizer(szr)
+
+        self.Centre()
+        self.Show()
         pass
-    return sharedTruths
+    def nxt(self, eventThingy):
+        fnames = listdir('sceneInputs/')
+        fname = self.fnames.GetValue()
 
-if __name__ == "__main__":
-    goodList, mindex = getSDLs('good')
+        if self.delete.GetValue(): f,word = deleteProblemSet,'delete'
+        elif self.analyze.GetValue(): f,word = analyzeProblemSet,'analyze'
 
-    print 'We shall generate true statements about good%d'%(mindex+1)
-    #Background color and list of shape descriptors from the simplest scene
-    bgc,shapeDescList = goodList[mindex]
-    #Find assertions about the simplest scene
-    trueStatements = getTrueStatements(bgc, shapeDescList)
-    print 'There are',len(trueStatements),'true assertions'
+        if self.make.GetValue():
+            lastProblemSet = fnames[-1][-1] if len(fnames) else '0'            
+            ps = int(lastProblemSet)+1
+            call(['mkdir', 'sceneInputs/ps%d'%ps])
+            self.Close()
+            createProblemSet(ps)
+            pass
+        elif fname in fnames:
+            ps = int(fname[-1])
+            self.Close()
+            f(ps)
+            pass
+        else: print 'Please select a problem set to',word
 
-    print 'How many are true for all six "good" images and false for all "bad"?'
-    sharedTruths = getSharedTruths(goodList,trueStatements)
-    print len(sharedTruths)
+        pass
+    pass
 
-    f = open('sharedTruths','w')
-    f.writelines(sharedTruths)
-    f.close()
+def startGUI():
+    #What the user sees first
+    #Choose between making new problem set, deleting old one, or analyzing
+    app = wx.App()
+    styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
+    Start(None,size=(250,200),title='Etaoin, or Etta Owen',style=styleSet)
+    app.MainLoop()
+    pass
+
+def deleteProblemSet(ps):
+    #rm -r that directory
+    call(['rm', '-r', 'sceneInputs/ps%d/'%ps])
+
+    #rename subsequent directories, if any
+    ps += 1
+    dirname = 'ps%d'%ps
+    while dirname in listdir('sceneInputs'):
+        call(['mv', 'sceneInputs'+dirname, 'sceneInputs/ps%d'%(ps-1)])
+        ps += 1
+        dirname = 'ps%d'%ps
+        pass
+    pass
+
+def createProblemSet(ps):
+    for i in range(1,7): creationGUI('sceneInputs/ps%d/good%d'%(ps,i))
+    for i in range(1,7): creationGUI('sceneInputs/ps%d/bad%d'%(ps,i))
+
+if __name__ == '__main__':
+    startGUI()
     pass
