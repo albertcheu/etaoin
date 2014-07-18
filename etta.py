@@ -177,6 +177,7 @@ def deleteProblemSet(ps):
         ps += 1
         dirname = 'ps%d'%ps
         pass
+    exit(0)
     pass
 
 def createProblemSet(ps):

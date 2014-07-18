@@ -2,14 +2,18 @@
 from PIL import Image
 from operator import le as convexDown
 from operator import ge as convexUp
-from math import sqrt, acos, pi
+from math import sqrt, acos, pi, tan
 from random import sample
 from sys import maxint
 from bisect import bisect
-from polygon import BoundingBox, DEFNS, inScreen
+
+from polygon import Polygon, inScreen
+from constants import DEFNS
+
 (X,Y) = (0,1)
-MINDIST = 10
+MINDIST = 7
 MINFRAC = 0.02
+VERTICAL1,VERTICAL2 = 90,270
 
 def edge(i, j, grid, height, width):
     if i > 0 and grid[i-1][j] != grid[i][j]: return True
@@ -42,7 +46,6 @@ def smartInsert(half, currentElem, wrongConvexity):
 
 def makeHull(points):
     #Variant of Monotone Chain
-    points.sort()
 
     #Make upper half
     upper = [points[0]]
@@ -57,13 +60,12 @@ def makeHull(points):
         smartInsert(lower, points[i], convexUp)
         pass
 
-    #Piece together (counter-clockwise from lower left)
-    lower.reverse()
-    if upper[-1] == lower[-1]: upper.pop()
-    for i in range(len(upper)-1,-1,-1): lower.append(upper[i])
-    if lower[-1] == lower[0]: lower.pop()
+    #Piece together (clockwise from upper left)
+    start = 0 if lower[0]!=upper[-1] else 1
+    if lower[-1] == upper[0]: lower.pop()
+    for i in range(start,len(lower)): upper.append(lower[i])
 
-    return lower
+    return upper
 
 def dist(p1, p2): return sqrt((p1[X]-p2[X])**2 + (p1[Y]-p2[Y])**2)
 
@@ -92,16 +94,21 @@ def negligible(p1,p2,p3):
     #return d < MINDIST
     #return angle(p1,p2,p3) < 0.1*pi
 
-def describe(edgePixels, swidth, sheight):
-    #Make convex hull
-    hull = makeHull(edgePixels)
-
+def removeClusters(hull):
     #Remove point clusters
     remove = set()
     for i in range(len(hull)):
         if dist(hull[i], hull[(i+1)%len(hull)]) < MINDIST: remove.add(hull[i])
         pass
     for item in remove: hull.remove(item)
+
+def oldDescribe(edgePixels, swidth, sheight):
+    #Make convex hull
+    hull = makeHull(edgePixels)
+
+    #Remove point clusters
+    removeClusters(hull)
+
     #print hull
     #Remove artifact pixels (in bitmap images, lines are bumpy)
     if len(hull) > 3:
@@ -127,29 +134,73 @@ def describe(edgePixels, swidth, sheight):
     #What kind of polygon?
     kind = DEFNS[len(hull)]
     #Where is the polygon?
-    bb = BoundingBox(hull, swidth, sheight)
+    bb = Polygon(hull, swidth, sheight)
     location = " ".join(bb.whereAmI())
 
     print "There is a", kind, "at the", location, "of the screen"
     pass
 
-def explore(adj, unvisited):
-    cc = []
-    stack = [sample(unvisited, 1)[0]]
-    while len(stack):
-        p = stack[-1]
-        stack.pop()
-        if p in unvisited:
-            cc.append(p)
-            unvisited.remove(p)
-            for neigh in adj[p]:
-                if neigh in unvisited: stack.append(neigh)
-                pass
+def describe(edgePixels, swidth, sheight):
+    def lineDist(pt, a,b,c): return abs(a*pt[X]+b*pt[Y]+c) / sqrt(a**2+b**2)
+    def inRange(pt, origin, theta):
+        #Is pt close to the ray coming out of origin at angle theta?
+        #convert ray to line
+        if theta in (VERTICAL1,VERTICAL2): a,b,c = 1,0,-1*origin[X]
+        else:
+            slope = tan(theta*pi/180)
+            a,b,c = -1*slope,1,slope*origin[X]-origin[Y]
+            pass        
+        return lineDist(pt,a,b,c) < MINDIST
+    def countSat(hull, i, theta):
+        #Cast ray from hull[i] at angle theta
+        #count how many points of hull are close to that ray
+        j,ans = i+1, 0
+        while j < len(hull) and inRange(hull[j], hull[i], theta):
+            j += 1
+            ans += 1
             pass
+        return ans
+    #Reduce no. of points to consider and put them in clockwise order
+    hull = makeHull(edgePixels)
+
+    i = 0
+    theta = 90
+    vertices = [hull[i]]
+    while i < len(hull)-1:
+        sat,prev = 0,-1
+        while sat >= prev:
+            #Cast ray from current vertex
+            #Pick angle that is a local maxima
+            prev = sat
+            sat = countSat(hull, i, theta)
+            theta = (theta-2)%360
+            pass
+        #Pick point along ray furthest from current vertex as current vertex
+        i += prev
+        if i < len(hull): vertices.append(hull[i])
+        else: vertices.append(hull[-1])
         pass
-    return cc
+    print vertices
+    pass
 
 def connectedComponents(edgePixels, swidth, sheight):
+    def explore(adj, unvisited):
+        #DFS code
+        cc = []
+        stack = [sample(unvisited, 1)[0]]
+        while len(stack):
+            p = stack[-1]
+            stack.pop()
+            if p in unvisited:
+                cc.append(p)
+                unvisited.remove(p)
+                for neigh in adj[p]:
+                    if neigh in unvisited: stack.append(neigh)
+                    pass
+                pass
+            pass
+        cc.sort()
+        return cc
     #Make adjacency list
     (unvisited, adj) = (set(),{})
     for (x,y) in edgePixels:
@@ -169,7 +220,7 @@ def connectedComponents(edgePixels, swidth, sheight):
     return ccs
 
 if __name__ == "__main__":
-    im = Image.open("scene.png")
+    im = Image.open("problemSets/ps1/good4.png")
     pixels = list(im.getdata())
     (swidth, sheight) = im.size
     grid = []
