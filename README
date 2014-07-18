@@ -33,24 +33,26 @@
     -Produces relevant statements about the scene
     -generativeGram.cfg is a smaller variant of grammar.cfg; assertions only
 
-  -testGUI.py
-    -Lets me input what is in the good and bad scenes
-    -Dropdown menu for background color
-    -For each of the 9 regions of the screen, we have dropdown menus for color and number of sides. If left blank, there is no figure there.
-
-  -Main file (etta.py)
-    -Calls makeScene on simplest good scene in sceneInputs
+  -analysis.py (analyzeProblemSet(ps))
+    -Calls makeScene on simplest good scene in the directory
     -Generate assertions (pass in the bgc and shapeDescList to gen())
     -Check each assertion using the function processWords from interface.py
     -If it is True for 'good' and False for 'bad' files, write to 'sharedTruths'
 
+  -etta.py
+    -The file that is executed (./etta.py)
+    -Choose between making,deleting,analyzing problem sets
+      -Dropdown menu for the last two to select the problem set
+    -Making
+      -Lets me input what is in the good and bad scenes
+      -Dropdown menu for background color
+      -For each of the 9 regions of the screen, we have dropdown menus for color and number of sides. If left blank, there is no figure there.
+    -Deleting
+      -rm -r <the problem set directory>
+      -Rename the subsequent problem sets (decrement the numbers)
+    -Analyze
+      -Call analyzeProblemSet from analysis.py on the directory
 
   -TO DO
-    -GUI for etta: present 2 options: make new problem or solve old one
-      -make new problem = testGUI
-      -solve old one =
-        -Present images to user
-	-Run present etta code on the corresponding set of shapeDescLists
-
     -Make analyzeScene work: produce bgc, shapeDescList from png alone
     -Find way to move the polygons, "untethering" them from the sceneInputs
