@@ -115,12 +115,12 @@ irrelevant to 'make' but required
 when deleting or analyzing.
 '''
 
-        self.txt = wx.StaticText(panel,label=txt)#,style=wx.ALIGN_CENTRE)
+        self.txt = wx.StaticText(panel,label=txt)
         self.make = wx.RadioButton(panel,label='Make a problem set',
                                    style=wx.RB_GROUP)
         self.delete = wx.RadioButton(panel,label='Delete a problem set')
         self.analyze = wx.RadioButton(panel,label='Analyze a problem set')
-        self.fnames = wx.ComboBox(panel,choices=listdir('sceneInputs/'),
+        self.fnames = wx.ComboBox(panel,choices=listdir('problemSets/'),
                                   style=wx.CB_READONLY,value='Problem set...')
         self.select = wx.Button(panel, label='Next')
         self.select.Bind(wx.EVT_BUTTON, self.nxt)
@@ -134,7 +134,7 @@ when deleting or analyzing.
         self.Show()
         pass
     def nxt(self, eventThingy):
-        fnames = listdir('sceneInputs/')
+        fnames = listdir('problemSets/')
         fname = self.fnames.GetValue()
 
         if self.delete.GetValue(): f,word = deleteProblemSet,'delete'
@@ -167,26 +167,26 @@ def startGUI():
 
 def deleteProblemSet(ps):
     #rm -r that directory
-    call(['rm', '-r', 'sceneInputs/ps%d/'%ps])
+    call(['rm', '-r', 'problemSets/ps%d/'%ps])
 
     #rename subsequent directories, if any
     ps += 1
     dirname = 'ps%d'%ps
-    while dirname in listdir('sceneInputs'):
-        call(['mv', 'sceneInputs'+dirname, 'sceneInputs/ps%d'%(ps-1)])
+    while dirname in listdir('problemSets'):
+        call(['mv', 'problemSets'+dirname, 'problemSets/ps%d'%(ps-1)])
         ps += 1
         dirname = 'ps%d'%ps
         pass
     pass
 
 def createProblemSet(ps):
-    call(['mkdir', 'sceneInputs/ps%d'%ps])
-    for i in range(1,7): creationGUI('sceneInputs/ps%d/good%d'%(ps,i))
-    for i in range(1,7): creationGUI('sceneInputs/ps%d/bad%d'%(ps,i))
-    files = listdir('sceneInputs/ps%d'%ps)
+    call(['mkdir', 'problemSets/ps%d'%ps])
+    for i in range(1,7): creationGUI('problemSets/ps%d/good%d'%(ps,i))
+    for i in range(1,7): creationGUI('problemSets/ps%d/bad%d'%(ps,i))
+    files = listdir('problemSets/ps%d'%ps)
     if len(files) < 12:
         print 'Oh, you skipped one'
-        call(['rm', '-r', 'sceneInputs/ps%d'%ps])
+        call(['rm', '-r', 'problemSets/ps%d'%ps])
         pass
     exit(0)
     pass

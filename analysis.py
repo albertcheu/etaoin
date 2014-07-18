@@ -68,7 +68,7 @@ def getSharedTruths(ps, goodList, trueStatements):
             pass
         return True
     #Don't need to know the mindex of the bad pictures
-    badList = getSDLs('sceneInputs/ps%d/bad'%ps)[0]
+    badList = getSDLs('problemSets/ps%d/bad'%ps)[0]
     sharedTruths = []
     for line in trueStatements:
         words = line.strip().split()
@@ -79,7 +79,7 @@ def getSharedTruths(ps, goodList, trueStatements):
     return sharedTruths
 
 def analyzeProblemSet(ps):
-    goodList, mindex = getSDLs('sceneInputs/ps%d/good'%ps)
+    goodList, mindex = getSDLs('problemSets/ps%d/good'%ps)
 
     print 'We shall generate true statements about good%d'%(mindex+1)
     #Background color and list of shape descriptors from the simplest scene
