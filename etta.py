@@ -26,7 +26,7 @@ class SceneInput(wx.Frame):
         vsizer.Add(self.makeTop(panel, flagSet),flag=wx.ALIGN_CENTER)
         drawLines(panel, flagSet, vsizer)
 
-        vsizer.Add(self.makeGrid(panel, flagSet), flag=flagSet,border=10)
+        vsizer.Add(self.makeGrid(panel), flag=flagSet,border=10)
         drawLines(panel, flagSet, vsizer)
 
         self.submit = wx.Button(panel,label='Submit!')
@@ -46,7 +46,7 @@ class SceneInput(wx.Frame):
         hsizer.Add(self.bgcSelect,flag=flagSet, border = 5)    
         return hsizer
 
-    def makeGrid(self, panel, flagSet):
+    def makeGrid(self, panel):
         gs = wx.GridSizer(3,3,5,5)
         regions = ('Top-left','Top','Top-right','Left','Center',
                    'Right','Bottom-left','Bottom','Bottom-right')
@@ -100,7 +100,22 @@ class Start(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(Start, self).__init__(*args, **kwargs)
         panel = wx.Panel(self)
+        txt = '''
+Hello! This is Etaoin (or Etta Owen).
 
+This system finds sentences that are
+true for 6 images, false for another 6.
+The images are of simple polygons.
+You can make new problem sets!
+
+Please choose one of the choices.
+
+The selection of problem set is
+irrelevant to 'make' but required
+when deleting or analyzing.
+'''
+
+        self.txt = wx.StaticText(panel,label=txt)#,style=wx.ALIGN_CENTRE)
         self.make = wx.RadioButton(panel,label='Make a problem set',
                                    style=wx.RB_GROUP)
         self.delete = wx.RadioButton(panel,label='Delete a problem set')
@@ -111,7 +126,8 @@ class Start(wx.Frame):
         self.select.Bind(wx.EVT_BUTTON, self.nxt)
 
         szr = wx.BoxSizer(wx.VERTICAL)
-        szr.AddMany((self.make,self.delete,self.analyze,self.fnames,self.select))
+        szr.AddMany((self.txt,self.make,self.delete, self.analyze,self.fnames))
+        szr.Add(self.select,flag=wx.ALIGN_RIGHT|wx.TOP|wx.RIGHT,border=10)
         panel.SetSizer(szr)
 
         self.Centre()
@@ -127,7 +143,6 @@ class Start(wx.Frame):
         if self.make.GetValue():
             lastProblemSet = fnames[-1][-1] if len(fnames) else '0'            
             ps = int(lastProblemSet)+1
-            call(['mkdir', 'sceneInputs/ps%d'%ps])
             self.Close()
             createProblemSet(ps)
             pass
@@ -146,7 +161,7 @@ def startGUI():
     #Choose between making new problem set, deleting old one, or analyzing
     app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    Start(None,size=(250,200),title='Etaoin, or Etta Owen',style=styleSet)
+    Start(None,size=(250,400),title='Etaoin, or Etta Owen',style=styleSet)
     app.MainLoop()
     pass
 
@@ -165,8 +180,16 @@ def deleteProblemSet(ps):
     pass
 
 def createProblemSet(ps):
+    call(['mkdir', 'sceneInputs/ps%d'%ps])
     for i in range(1,7): creationGUI('sceneInputs/ps%d/good%d'%(ps,i))
     for i in range(1,7): creationGUI('sceneInputs/ps%d/bad%d'%(ps,i))
+    files = listdir('sceneInputs/ps%d'%ps)
+    if len(files) < 12:
+        print 'Oh, you skipped one'
+        call(['rm', '-r', 'sceneInputs/ps%d'%ps])
+        pass
+    exit(0)
+    pass
 
 if __name__ == '__main__':
     startGUI()
