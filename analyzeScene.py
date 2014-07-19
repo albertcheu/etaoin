@@ -3,7 +3,6 @@ from PIL import Image
 from operator import le as convexDown
 from operator import ge as convexUp
 from math import sqrt, acos, pi, tan
-from random import sample
 from sys import maxint
 from bisect import bisect
 
@@ -11,9 +10,8 @@ from polygon import Polygon, inScreen
 from constants import DEFNS
 
 (X,Y) = (0,1)
-MINDIST = 7
-MINFRAC = 0.02
-VERTICAL1,VERTICAL2 = 90,270
+MINDIST = 18
+MINFRAC = 0.05
 
 def edge(i, j, grid, height, width):
     if i > 0 and grid[i-1][j] != grid[i][j]: return True
@@ -77,117 +75,74 @@ def angle(a,b,c):
     ratio = dp / (ab*bc)
     return acos(ratio)
 
-def negligible(p1,p2,p3):
-    #Is p2 very close to line p1-p3?
-    if p1[X] == p3[X]: d = abs(p2[X]-p1[X])
-    else:
-        m = slope(p1,p3)
-        #y = mx+i --> i = y-mx
-        intercept = p1[Y]-(m*p1[X])
-        #-mx+y-i = 0
-        #ax+by+c = 0
-        (a,b,c) = (-1*m,1,-1*intercept)
-        d = abs(a*p2[X]+b*p2[Y]+c) / sqrt(a**2 + b**2)
+def describe(edgePixels):
+    #Only works because these are convex polygons whose vertices are always on the bounding box' sides
+
+    def scanEdge(edgePixels, index, yval, inc1, inc2):
+        while edgePixels[index][Y] == yval: index += inc1
+        index += inc2
+        return index
+
+    s = set()
+    #Top left, bottom right
+    ytop,ybot = edgePixels[0][Y],edgePixels[-1][Y]
+    s.add(edgePixels[0])
+    s.add(edgePixels[-1])
+    #
+    topRight = scanEdge(edgePixels, 0, ytop, 1, -1)
+    s.add(edgePixels[topRight])
+    #
+    bottomLeft = scanEdge(edgePixels, len(edgePixels)-1, ybot, -1, 1)
+    s.add(edgePixels[bottomLeft])
+
+    #Find leftmost and rightmost x
+    leftx,rightx = 1000,-1
+    for (x,y) in edgePixels:
+        if x < leftx: leftx = x
+        if x > rightx: rightx = x
         pass
-    return d < MINFRAC * dist(p1, p3)
-    #return angle(p1,p2,p3) < 0.1*pi or d < MINDIST
-    #return d < MINDIST
-    #return angle(p1,p2,p3) < 0.1*pi
-
-def removeClusters(hull):
-    #Remove point clusters
-    remove = set()
-    for i in range(len(hull)):
-        if dist(hull[i], hull[(i+1)%len(hull)]) < MINDIST: remove.add(hull[i])
-        pass
-    for item in remove: hull.remove(item)
-
-def oldDescribe(edgePixels, swidth, sheight):
-    #Make convex hull
-    hull = makeHull(edgePixels)
-
-    #Remove point clusters
-    removeClusters(hull)
-
-    #print hull
-    #Remove artifact pixels (in bitmap images, lines are bumpy)
-    if len(hull) > 3:
-        remove = set()
-        (i,j,k) = (0,1,2)
-        while i < len(hull):
-            (p1,p2,p3) = (hull[i],hull[j],hull[k])
-            if negligible(p1,p2,p3): remove.add(p2)
-            else:
-                if i > j: break
-                i = j
+    #The first instances are at the top
+    unseenLeft, unseenRight = True, True
+    prevLeft,prevRight = (0,0),(0,0)
+    for (x,y) in edgePixels:
+        if x == leftx:
+            if unseenLeft:
+                unseenLeft = False
+                s.add((x,y))
                 pass
-
-            j = k
-            k = (k+1)%len(hull)
-            while hull[k] in remove and k < len(hull): k += 1
+            prevLeft = (x,y)
             pass
-
-        for p in remove: hull.remove(p)
+        elif x == rightx:
+            if unseenRight:
+                unseenRight = False
+                s.add((x,y))
+                pass
+            prevRight = (x,y)
+            pass
         pass
-    print hull
 
-    #What kind of polygon?
-    kind = DEFNS[len(hull)]
-    #Where is the polygon?
-    bb = Polygon(hull, swidth, sheight)
-    location = " ".join(bb.whereAmI())
+    #the last instances are at the bottom
+    s.add(prevLeft)
+    s.add(prevRight)
 
-    print "There is a", kind, "at the", location, "of the screen"
-    pass
-
-def describe(edgePixels, swidth, sheight):
-    def lineDist(pt, a,b,c): return abs(a*pt[X]+b*pt[Y]+c) / sqrt(a**2+b**2)
-    def inRange(pt, origin, theta):
-        #Is pt close to the ray coming out of origin at angle theta?
-        #convert ray to line
-        if theta in (VERTICAL1,VERTICAL2): a,b,c = 1,0,-1*origin[X]
-        else:
-            slope = tan(theta*pi/180)
-            a,b,c = -1*slope,1,slope*origin[X]-origin[Y]
-            pass        
-        return lineDist(pt,a,b,c) < MINDIST
-    def countSat(hull, i, theta):
-        #Cast ray from hull[i] at angle theta
-        #count how many points of hull are close to that ray
-        j,ans = i+1, 0
-        while j < len(hull) and inRange(hull[j], hull[i], theta):
-            j += 1
-            ans += 1
+    #Remove point clusters
+    ls = list(s)
+    for i in range(len(ls)):
+        for j in range(i+1,len(ls)):
+            if dist(ls[i],ls[j]) < MINDIST and ls[j] in s: s.remove(ls[j])
             pass
-        return ans
-    #Reduce no. of points to consider and put them in clockwise order
-    hull = makeHull(edgePixels)
-
-    i = 0
-    theta = 90
-    vertices = [hull[i]]
-    while i < len(hull)-1:
-        sat,prev = 0,-1
-        while sat >= prev:
-            #Cast ray from current vertex
-            #Pick angle that is a local maxima
-            prev = sat
-            sat = countSat(hull, i, theta)
-            theta = (theta-2)%360
-            pass
-        #Pick point along ray furthest from current vertex as current vertex
-        i += prev
-        if i < len(hull): vertices.append(hull[i])
-        else: vertices.append(hull[-1])
         pass
-    print vertices
-    pass
+
+    print len(s)
+    print s
+    print ytop,ybot,leftx,rightx
+    return
 
 def connectedComponents(edgePixels, swidth, sheight):
     def explore(adj, unvisited):
         #DFS code
         cc = []
-        stack = [sample(unvisited, 1)[0]]
+        stack = [list(unvisited)[0]]
         while len(stack):
             p = stack[-1]
             stack.pop()
@@ -199,7 +154,7 @@ def connectedComponents(edgePixels, swidth, sheight):
                     pass
                 pass
             pass
-        cc.sort()
+        cc.sort(key=lambda pt: pt[Y])
         return cc
     #Make adjacency list
     (unvisited, adj) = (set(),{})
@@ -220,7 +175,7 @@ def connectedComponents(edgePixels, swidth, sheight):
     return ccs
 
 if __name__ == "__main__":
-    im = Image.open("problemSets/ps1/good4.png")
+    im = Image.open("problemSets/ps1/good6.png")
     pixels = list(im.getdata())
     (swidth, sheight) = im.size
     grid = []
@@ -237,6 +192,6 @@ if __name__ == "__main__":
 
     #Describe each shape
     ccs = connectedComponents(edgePixels, swidth, sheight)
-    for cc in ccs: describe(cc, swidth, sheight)
+    for cc in ccs: describe(cc)
 
     pass

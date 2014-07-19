@@ -81,7 +81,7 @@ def makeScene1(fname):
         region = int(lines[l].strip())
         l += 1
 
-        #Random symmetry & orientation for now
+        #Random for now
         symm = choice((True,False))
         base = choice((TOP,RIGHT,BOTTOM,LEFT))
 
