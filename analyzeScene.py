@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from PIL import Image
-from math import sqrt, acos, pi, tan
+from math import sqrt, acos, pi, tan, atan2
 from sys import maxint
 from bisect import bisect
 
@@ -8,7 +8,8 @@ from polygon import Polygon, inScreen
 from constants import DEFNS
 
 (X,Y) = (0,1)
-MINDIST = 8
+MINDIST = 10
+MINFRAC = 0.2
 
 def edge(bgTriple, i, j, grid, height, width):
     if grid[i][j] == bgTriple: return False
@@ -24,6 +25,8 @@ def slope(pa, pb): return float(pa[Y] - pb[Y]) / (pa[X] - pb[X])
 
 def dist(p1, p2): return sqrt((p1[X]-p2[X])**2 + (p1[Y]-p2[Y])**2)
 
+def lineDist(a,b,c, pt): return abs(a*pt[X]+b*pt[Y]+c) / sqrt(a**2+b**2)
+
 def angle(a,b,c):
     #Dot product
     dp = 0.0
@@ -31,6 +34,50 @@ def angle(a,b,c):
     (ab, bc) = (dist(a,b),dist(b,c))
     ratio = dp / (ab*bc)
     return acos(ratio)
+
+def removeClusters1(s):
+    #Because bitmaps are made of little squares, angled lines are approximated
+    #So there can be a pixel with the same yval as a triangle tip, for example
+    #That artifact pixel is likely to be close to the tip
+    ls = list(s)
+    for i in range(len(ls)):
+        for j in range(i+1,len(ls)):
+            if dist(ls[i],ls[j]) < MINDIST and ls[j] in s: s.remove(ls[j])
+            pass
+        pass
+    pass
+
+def removeClusters2(s):
+    def clockwise(ls):
+        avgy = sum(pt[Y] for pt in ls) / len(ls)
+        avgx = sum(pt[X] for pt in ls) / len(ls) 
+        f = lambda pt: (atan2(pt[Y] - avgy, pt[X] - avgx) + 2*pi) % 2*pi
+        ls.sort(key=f)
+        pass
+    def cycle(ls, s):
+        i = 0
+        while i < len(ls)-1:
+            p1,p2,p3 = ls[i],ls[(i+1)%len(ls)],ls[(i+2)%len(ls)]
+            if p1[X] == p3[X]: a,b,c = 1,0,-1*p1[X]
+            else:
+                m = slope(p1,p3)
+                a,b,c = -1*m,1,m*p1[X]-p1[Y]
+                pass
+            if lineDist(a,b,c,p2) < MINDIST:
+                s.remove(p2)
+                i += 2
+                pass
+            else: i += 1
+            pass
+        pass
+    #Because bitmaps are made of little squares, angled lines are approximated
+    #So there can be a pixel with the same yval as a triangle tip, for example
+    #That artifact pixel is likely to be close to the ideal line
+    ls = list(s)
+    clockwise(ls)
+    cycle(ls,s)
+    cycle(list(s),s)
+    pass
 
 def describe(edgePixels):
     #Only works because these are convex polygons whose vertices are always on the bounding box' sides
@@ -86,17 +133,11 @@ def describe(edgePixels):
     s.add(prevLeft)
     s.add(prevRight)
 
-    #Remove point clusters
-    ls = list(s)
-    for i in range(len(ls)):
-        for j in range(i+1,len(ls)):
-            if dist(ls[i],ls[j]) < MINDIST and ls[j] in s: s.remove(ls[j])
-            pass
-        pass
+    removeClusters1(s)
+    removeClusters2(s)
 
     print len(s)
     print s
-    print ytop,ybot,leftx,rightx
     return
 
 def connectedComponents(edgePixels, swidth, sheight):
@@ -116,7 +157,7 @@ def connectedComponents(edgePixels, swidth, sheight):
                     pass
                 pass
             pass
-        cc.sort(key=lambda pt: pt[Y])
+        cc.sort(key=lambda pt: (pt[Y],pt[X]))
         return cc
 
     #Make adjacency list
@@ -139,7 +180,7 @@ def connectedComponents(edgePixels, swidth, sheight):
     return ccs
 
 if __name__ == "__main__":
-    im = Image.open("problemSets/ps1/good6.png")
+    im = Image.open("problemSets/ps1/good3.png")
     pixels = list(im.getdata())
     (swidth, sheight) = im.size
     grid = []
