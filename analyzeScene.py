@@ -136,9 +136,8 @@ def describe(edgePixels):
     removeClusters1(s)
     removeClusters2(s)
 
-    print len(s)
-    print s
-    return
+    ans = list(s)
+    return ans
 
 def connectedComponents(edgePixels, swidth, sheight):
 
@@ -199,7 +198,16 @@ if __name__ == "__main__":
         pass
 
     #Describe each shape
+    shapeDescList = []
     ccs = connectedComponents(edgePixels, swidth, sheight)
-    for cc in ccs: describe(cc)
 
+    for cc in ccs:
+        pts = describe(cc)
+        n = len(pts)
+        row,col = pts[0]
+        cTriple = grid[row][col]
+        
+        #shapeDesc = (n,False,0,c,Polygon(pts,swidth,sheight))
+        
+        pass
     pass

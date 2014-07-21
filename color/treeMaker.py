@@ -28,14 +28,25 @@ def fillTables(colorCount, raxis, gaxis, baxis):
     for fname in fnames:
         data = load(open("./colorCorpus/"+fname,"rb"))
         for (r,g,b,colors) in data:
-            if (r,g,b) in seen or len(colors)==0: continue
-            else:
+            if len(colors) == 0: continue
+            
+            if (r,g,b) not in seen:
                 seen.add((r,g,b))
                 points.append((r,g,b,colors))
+                raxis[r][COUNT] += 1
+                gaxis[g][COUNT] += 1
+                baxis[b][COUNT] += 1
                 pass
-            raxis[r][COUNT] += 1
-            gaxis[g][COUNT] += 1
-            baxis[b][COUNT] += 1
+            else:
+                for i in range(len(points)):
+                    p = points[i]
+                    if p[0]==r and p[1]==g and p[2]==b:
+
+                        points[i] = (r,g,b, points[i][3]+colors)
+                        break
+                    pass
+                pass
+
             for col in colors:
                 #Each value of r,g,&b has a frequency table
                 #Used to determine split points on each axis

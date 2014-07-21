@@ -14,7 +14,7 @@ if __name__ == "__main__":
     for fname in fnames:
         data = load(open("./colorCorpus/"+fname,"rb"))
         for (r,g,b,colors) in data:
-            if "green" in colors:
+            if "gray" in colors:
                 exes.append(r)
                 whys.append(g)
                 zees.append(b)
