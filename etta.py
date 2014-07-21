@@ -7,6 +7,7 @@ import wx
 
 from constants import COLORS, DEFNS
 from analysis import analyzeProblemSet
+from makeScene import makeScene1
 
 sideOptions = map(str, sorted(DEFNS.keys()) )
 
@@ -182,13 +183,22 @@ def deleteProblemSet(ps):
 
 def createProblemSet(ps):
     call(['mkdir', 'problemSets/ps%d'%ps])
-    for i in range(1,7): creationGUI('problemSets/ps%d/good%d'%(ps,i))
-    for i in range(1,7): creationGUI('problemSets/ps%d/bad%d'%(ps,i))
+    for i in range(1,7):
+        fname = 'problemSets/ps%d/good%d'%(ps,i)
+        creationGUI(fname)
+        makeScene1(fname)
+        pass
+    for i in range(1,7):
+        fname = 'problemSets/ps%d/bad%d'%(ps,i)
+        creationGUI(fname)
+        makeScene1(fname)
+        pass
     files = listdir('problemSets/ps%d'%ps)
     if len(files) < 12:
         print 'Oh, you skipped one'
         call(['rm', '-r', 'problemSets/ps%d'%ps])
         pass
+    call(['gnome-open', 'problemSets/ps1/good1.png'])
     exit(0)
     pass
 

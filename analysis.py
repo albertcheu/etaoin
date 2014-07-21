@@ -5,7 +5,7 @@ from os import listdir
 from gen import gen, getGramDict
 from interface import interface,processWords
 from constants import YES, NO, C, N
-from makeScene import makeScene1
+from analyzeScene import processImage
 
 def getSDLs(label):
     #label = 'good' or 'bad', the prefix of the filename in sceneInputs
@@ -24,7 +24,8 @@ def getSDLs(label):
     minComplexity,mindex = 1000,-1
     for i in range(1,7):
         fname = '%s%d'%(label,i)
-        bgc,shapeDescList = makeScene1(fname)
+        bgc,shapeDescList = processImage(fname+'.png')
+
         sdlList.append((bgc,shapeDescList))
         c = complexity(shapeDescList)
         if c < minComplexity: minComplexity,mindex = c, i-1

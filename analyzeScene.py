@@ -1,11 +1,12 @@
 #!/usr/bin/python
-from PIL import Image
 from math import sqrt, acos, pi, tan, atan2
 from sys import maxint
 from bisect import bisect
 
+from PIL import Image, ImageColor
+
 from polygon import Polygon, inScreen
-from constants import DEFNS
+from constants import DEFNS, COLORS
 
 (X,Y) = (0,1)
 MINDIST = 10
@@ -178,8 +179,15 @@ def connectedComponents(edgePixels, swidth, sheight):
     while len(unvisited): ccs.append(explore(adj, unvisited))
     return ccs
 
-if __name__ == "__main__":
-    im = Image.open("problemSets/ps1/good3.png")
+def tripleToColor(colorTriple):
+    #Loop thru every color and see if PIL makes a triple equivalent to the param
+    for color in COLORS:
+        if ImageColor.getrgb(color) == colorTriple: return color
+        pass
+    pass
+
+def processImage(fname):
+    im = Image.open(fname)
     pixels = list(im.getdata())
     (swidth, sheight) = im.size
     grid = []
@@ -188,6 +196,7 @@ if __name__ == "__main__":
 
     #Find background color (RGB triple)
     bgTriple = grid[0][0]
+    bgc = tripleToColor(bgTriple)
 
     #Find pixels that are next to ones of bgc
     edgePixels = []
@@ -197,17 +206,15 @@ if __name__ == "__main__":
             pass
         pass
 
-    #Describe each shape
-    shapeDescList = []
     ccs = connectedComponents(edgePixels, swidth, sheight)
-
+    shapeDescList = []
     for cc in ccs:
         pts = describe(cc)
         n = len(pts)
-        row,col = pts[0]
+        col,row = pts[0]
         cTriple = grid[row][col]
-        
-        #shapeDesc = (n,False,0,c,Polygon(pts,swidth,sheight))
-        
+        c = tripleToColor(cTriple)
+        poly = Polygon(pts,swidth,sheight)
+        shapeDescList.append( (n, False,0, c, poly) )
         pass
-    pass
+    return bgc, shapeDescList
