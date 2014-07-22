@@ -96,4 +96,4 @@ def analyzeProblemSet(ps):
     f = open('sharedTruths','w')
     f.writelines(sharedTruths)
     f.close()
-    return 'There are %d statements true for the good images and false for the bad images' % len(sharedTruths)
+    return 'There are %d statements true for the good images and false for the bad images:\n%s' % (len(sharedTruths),' '.join(sharedTruths))

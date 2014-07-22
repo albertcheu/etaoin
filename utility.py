@@ -1,16 +1,26 @@
 from Queue import Queue
 from math import sqrt
-from constants import N, C, POLY, SNUM, PADDING
-def dist(a,b): return sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
+from constants import N, C, POLY, SNUM, PADDING, X,Y
+def dist(a,b): return sqrt((a[X]-b[X])**2 + (a[Y]-b[Y])**2)
 def avg(a,b): return (a+b)/2.0
+def lineDist(a,b,c, pt): return abs(a*pt[X]+b*pt[Y]+c) / sqrt(a**2+b**2)
+def slope(pa, pb): return float(pa[Y] - pb[Y]) / (pa[X] - pb[X])
 
-def adj(x,y):
-
-    xp,yp = x[POLY],y[POLY]
-    xr,yr = avg(xp.height,xp.width),avg(yp.height,yp.width)
-    d = dist((xp.cx,xp.cy),(yp.cx,yp.cy))
-
-    return d < (xr+yr)# - PADDING or d < (xr+yr) + PADDING
+def adj(a,b):
+    apts,bpts = a[POLY].pts,b[POLY].pts
+    #find closest pair of pts
+    m = 1000
+    pair = (None,None)
+    for apt in apts:
+        for bpt in bpts:
+            if dist(apt,bpt) < m:
+                m = dist(apt,bpt)
+                pair = (apt,bpt)
+                pass
+            pass
+        pass
+    k = min(a[POLY].swidth,a[POLY].sheight)
+    return m < k/3
 
 def below(a,b): return a[POLY].cy > b[POLY].maxY and adj(a,b)
 def above(a,b): return a[POLY].cy < b[POLY].minY and adj(a,b)

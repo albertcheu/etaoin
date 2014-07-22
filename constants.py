@@ -12,4 +12,9 @@ DNE = "That doesn't exist"
 THEPROB = "Be more specific or more general"
 YES = "Yes"
 NO = "No"
+
 COLORS = ["red", "orange", "yellow", "green", "blue", "violet", "pink", "cyan", "black", "white", "gray", "brown", "tan"]
+
+(X,Y) = (0,1)
+MINDIST = 10
+MINFRAC = 0.2

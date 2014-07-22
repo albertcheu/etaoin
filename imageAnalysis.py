@@ -6,11 +6,8 @@ from bisect import bisect
 from PIL import Image, ImageColor
 
 from polygon import Polygon, inScreen
-from constants import DEFNS, COLORS
-
-(X,Y) = (0,1)
-MINDIST = 10
-MINFRAC = 0.2
+from constants import DEFNS, COLORS, X,Y,MINDIST,MINFRAC
+from utility import dist, lineDist, slope
 
 def edge(bgTriple, i, j, grid, height, width):
     if grid[i][j] == bgTriple: return False
@@ -21,20 +18,6 @@ def edge(bgTriple, i, j, grid, height, width):
             pass
         pass
     return False
-
-def slope(pa, pb): return float(pa[Y] - pb[Y]) / (pa[X] - pb[X])
-
-def dist(p1, p2): return sqrt((p1[X]-p2[X])**2 + (p1[Y]-p2[Y])**2)
-
-def lineDist(a,b,c, pt): return abs(a*pt[X]+b*pt[Y]+c) / sqrt(a**2+b**2)
-
-def angle(a,b,c):
-    #Dot product
-    dp = 0.0
-    for i in range(2): dp += (b[i]-a[i])*(c[i]-b[i])
-    (ab, bc) = (dist(a,b),dist(b,c))
-    ratio = dp / (ab*bc)
-    return acos(ratio)
 
 def removeClusters1(s):
     #Because bitmaps are made of little squares, angled lines are approximated

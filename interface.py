@@ -1,4 +1,6 @@
+#!/usr/bin/python
 import sys
+from subprocess import call
 
 from nltk.parse.chart import BottomUpLeftCornerChartParser as lcp
 from nltk.data import load
@@ -6,6 +8,7 @@ from nltk.data import load
 from constants import NUMS, REASK, NO, YES
 from utility import treeHas, searchFirst, respond
 from handlers import handleBackground, handleAssertion, handleQuestion
+from imageAnalysis import processImage
 
 PARSER = lcp(load('file:grammar.cfg'))
 
@@ -15,9 +18,9 @@ def parseInput(words, bgc, shapeDescList):
         #print tree
         pass
     except:
-        respond(REASK)
         print sys.exc_info()
-        return
+        return (REASK, ' ')
+    if not tree: return (REASK, ' ')
 
     #Assertions are answered with bool
     #Questions are answered with str
@@ -71,4 +74,13 @@ def interface(bgc, shapeDescList):
         ans, assertion = processWords(words, bgc, shapeDescList)
         respond(ans)        
         pass
+    pass
+
+
+if __name__ == "__main__":
+    fname = 'problemSets/'+sys.argv[1]+'.png'
+    print fname
+    call(['gnome-open',fname])
+    bgc, shapeDescList = processImage(fname)
+    interface(bgc,shapeDescList)
     pass
