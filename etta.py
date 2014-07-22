@@ -140,17 +140,21 @@ when deleting or analyzing.
 
         if self.delete.GetValue(): f,word = deleteProblemSet,'delete'
         elif self.analyze.GetValue(): f,word = analyzeProblemSet,'analyze'
-
+        #Make a problem set
         if self.make.GetValue():
             lastProblemSet = fnames[-1][-1] if len(fnames) else '0'            
             ps = int(lastProblemSet)+1
             self.Close()
             createProblemSet(ps)
+            exit(0)
             pass
-        elif fname in fnames:
+        #Delete or analyze
+        if fname in fnames:
             ps = int(fname[-1])
             self.Close()
-            f(ps)
+            message = f(ps)
+            wx.MessageBox(message,'Alert!',wx.OK)
+            exit(0)
             pass
         else: print 'Please select a problem set to',word
 
@@ -178,8 +182,7 @@ def deleteProblemSet(ps):
         ps += 1
         dirname = 'ps%d'%ps
         pass
-    exit(0)
-    pass
+    return 'Deleted problem set %d.\nNote that subsequent problem sets have been renamed as well (if you delete ps3, ps4 is renamed ps3)'%ps
 
 def createProblemSet(ps):
     call(['mkdir', 'problemSets/ps%d'%ps])
@@ -198,8 +201,7 @@ def createProblemSet(ps):
         print 'Oh, you skipped one'
         call(['rm', '-r', 'problemSets/ps%d'%ps])
         pass
-    call(['gnome-open', 'problemSets/ps1/good1.png'])
-    exit(0)
+    call(['gnome-open', 'problemSets/ps%d/good1.png'%ps])
     pass
 
 if __name__ == '__main__':
