@@ -1,4 +1,4 @@
--Ideally, this project will be able to construct representations of scenes of polygons AND abstract shared properties between different scenes (pseudo-Bongard)
+This program (Etaoin, or Etta Owen) constructs representations of scenes of polygons AND abstracts shared properties between different scenes (pseudo-Bongard)
 
 -Modules
   -Color recognition (directory 'color'; run trainingWindow & testingWindow)
@@ -13,7 +13,7 @@
   -Space definitions (space.py)
     -left, right, top, bottom, corner, upper, lower, center, middle
 
-  -Image generation (makeScene.py makes scene.png; polygon.py, space.py)
+  -Image generation (makeScene.py, polygon.py, space.py)
     -The file passed into makeScene1(filename) tells what the scene looks like
     -It has format:
       -Background color
@@ -33,8 +33,12 @@
     -Produces relevant statements about the scene
     -generativeGram.cfg is a smaller variant of grammar.cfg; assertions only
 
+  -imageAnalysis.py (processImage(<filename>))
+    -Given a png file, deduce what is in it (polygons, colors)
+    -For now, it uses PIL to deduce the colors, not my color/ module
+
   -analysis.py (analyzeProblemSet(ps))
-    -Calls makeScene on simplest good scene in the directory
+    -Use imageAnalysis to get background color and shapeDescList
     -Generate assertions (pass in the bgc and shapeDescList to gen())
     -Check each assertion using the function processWords from interface.py
     -If it is True for 'good' and False for 'bad' files, write to 'sharedTruths'
@@ -54,5 +58,5 @@
       -Call analyzeProblemSet from analysis.py on the directory
 
   -TO DO
-    -Make analyzeScene work: produce bgc, shapeDescList from png alone
+    -Improve color/ module (performs poorly: false positives, false negatives)
     -Find way to move the polygons, "untethering" them from the sceneInputs
