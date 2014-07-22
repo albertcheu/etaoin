@@ -3,9 +3,10 @@ import wx
 
 from random import seed, randint
 seed()
-from pickle import dump
-from time import localtime
+from pickle import load
+
 from constants import COLORS
+from treeMaker import belong
 
 def randColor():
     r = random.randint(0,255)
@@ -13,21 +14,7 @@ def randColor():
     b = random.randint(0,255)
     return wx.Colour(r,g,b)
 
-def to2digit(num):
-    ans = str(num)
-    if len(ans) < 2: ans = "0"+ans
-    return ans
-
-def makeTime():
-    t = localtime()
-    #MMDDHHMinMin
-    month = to2digit(t.tm_mon)
-    day = to2digit(t.tm_mday)
-    hour = to2digit(t.tm_hour)
-    mn = to2digit(t.tm_min)
-    return month+day+hour+mn
-
-class TrainFrame(wx.Frame):
+class TestFrame(wx.Frame):
     def __init__(self, parent, title):
         self.data = []
 
@@ -41,10 +28,13 @@ class TrainFrame(wx.Frame):
         #Right side of window
         hbox.Add(self.makeRightHalf())
 
+        trees = load(open("decisionTrees.pkl","rb"))
+        self.decisionTrees = {}
+        for col in COLORS: self.decisionTrees[col] = belong(trees[col])
+
         self.SetSizer(hbox)
         self.Centre()
         self.Show(True)
-
         pass
 
     def makeLeftHalf(self):
@@ -56,6 +46,7 @@ class TrainFrame(wx.Frame):
             vbox.Add(cb, flag=wx.TOP|wx.BOTTOM, border=2)            
             pass
         return vbox
+
     def makeRightHalf(self):
         self.cpnl = wx.Panel(self,size=(110,160))
         
@@ -72,18 +63,10 @@ class TrainFrame(wx.Frame):
         (r,g,b) = (s.GetValue() for s in self.sliders)
         self.cpnl.SetBackgroundColour(wx.Colour(r,g,b))
 
-        self.nxt = wx.Button(self, label="Next")
-        self.save = wx.Button(self, label="Save")
-
-        self.nxt.Bind(wx.EVT_BUTTON,self.OnNext)
-        self.save.Bind(wx.EVT_BUTTON,self.OnSave)
-
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.cpnl)
         for i in range(3): vbox.AddMany((self.texts[i],self.sliders[i]))
-        vbox.Add(self.nxt)
-        vbox.Add(self.save)
-
+        
         return vbox
 
     def OnSlider(self, e):
@@ -91,41 +74,19 @@ class TrainFrame(wx.Frame):
         self.cpnl.SetBackgroundColour(wx.Colour(r,g,b))
         color = (r,g,b)
         for i in range(3): self.texts[i].SetLabel(str(color[i]))
-        pass
 
-    def OnNext(self, e):
-        #Clicked the Next button
-
-        #Determine the flags selected (what colors)
-        chosenColors = []
+        #Show which color flags the tree believes are applicable
         for i in range(len(COLORS)):
             cb = self.checkBoxes[i]
-            if cb.IsChecked():
-                cb.SetValue(False)
-                chosenColors.append(COLORS[i])
-                pass
+            col = COLORS[i]
+            cb.SetValue(self.decisionTrees[col](r,g,b))
             pass
-        
-        #Get RGB values
-        col = self.cpnl.GetBackgroundColour()
-        (r,g,b) = (col.Red(),col.Green(),col.Blue())
-        #Store pairing
-        self.data.append((r,g,b,chosenColors))
-        
-        pass
-    
-    def OnSave(self, e):
-        #Write data to a file
-        fname = makeTime()
-        dump(self.data, open("colorCorpus/"+fname,"wb"))
-        #Clear data
-        self.data = []
         pass
 
     pass
 
 if __name__ == "__main__":
     app = wx.App(False)
-    frame = TrainFrame(None, "Training Window")
+    frame = TestFrame(None, "Testing Window")
     app.MainLoop()
     pass
