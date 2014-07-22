@@ -28,6 +28,10 @@ This program (Etaoin, or Etta Owen) constructs representations of scenes of poly
     -processes English sentences and provides appropriate responses
     -constants.py & utility.py hold handy data elements and functions
     -grammar.cfg describes the context-free grammar that is used
+    -interface is executable!
+      -Have a polite conversation with Etta about an image
+      -The filename is passed as a command line parameter
+      -i.e. "ps1/good1" (it becomes "problemSets/ps1/good1.png")
 
   -Assertion generation (gen.py, generativeGram.cfg)
     -Produces relevant statements about the scene
