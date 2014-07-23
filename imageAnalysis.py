@@ -6,8 +6,10 @@ from bisect import bisect
 from PIL import Image, ImageColor
 
 from polygon import Polygon, inScreen
-from constants import DEFNS, COLORS, X,Y,MINDIST,MINFRAC
+from constants import DEFNS, COLORS, X,Y,MINDIST
 from utility import dist, lineDist, slope
+from color.treeMaker import belong
+from pickle import load
 
 def edge(bgTriple, i, j, grid, height, width):
     if grid[i][j] == bgTriple: return False
@@ -162,12 +164,18 @@ def connectedComponents(edgePixels, swidth, sheight):
     while len(unvisited): ccs.append(explore(adj, unvisited))
     return ccs
 
-def tripleToColor(colorTriple):
-    #Loop thru every color and see if PIL makes a triple equivalent to the param
-    for color in COLORS:
-        if ImageColor.getrgb(color) == colorTriple: return color
+def tripleToColor(colorTriple, decisionFunctions):
+    (r,g,b) = colorTriple
+    labels = []
+    for col in decisionFunctions.keys():
+        if decisionFunctions[col](r,g,b): labels.append(col)
         pass
-    pass
+    if len(labels) > 1:
+        for col in ('orange','violet','cyan','tan','brown'):
+            if col in labels: return col
+            pass
+        pass
+    return labels[0]
 
 def processImage(fname):
     im = Image.open(fname)
@@ -177,9 +185,13 @@ def processImage(fname):
     for row in range(sheight): grid.append([])
     for i in range(len(pixels)): grid[i/swidth].append(pixels[i])
 
+    trees = load(open('color/decisionTrees.pkl','rb'))
+    decisionFunctions = {}
+    for col in COLORS: decisionFunctions[col] = belong(trees[col])
+
     #Find background color (RGB triple)
     bgTriple = grid[0][0]
-    bgc = tripleToColor(bgTriple)
+    bgc = tripleToColor(bgTriple, decisionFunctions)
 
     #Find pixels that are next to ones of bgc
     edgePixels = []
@@ -196,7 +208,7 @@ def processImage(fname):
         n = len(pts)
         col,row = pts[0]
         cTriple = grid[row][col]
-        c = tripleToColor(cTriple)
+        c = tripleToColor(cTriple, decisionFunctions)
         poly = Polygon(pts,swidth,sheight)
         shapeDescList.append( (n, False,0, c, poly) )
         pass

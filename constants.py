@@ -17,4 +17,15 @@ COLORS = ["red", "orange", "yellow", "green", "blue", "violet", "pink", "cyan", 
 
 (X,Y) = (0,1)
 MINDIST = 10
-MINFRAC = 0.2
+
+#Min/max width & height of the screen
+(MINSWIDTH, MINSHEIGHT) = (400, 400)
+(MAXSWIDTH, MAXSHEIGHT) = (600, 600)
+
+#Our polygons must be flush against a Box
+#The Box's dimensions are bounded thusly
+(MINBWIDTH, MINBHEIGHT) = (100, 100)
+(MAXBWIDTH, MAXBHEIGHT) = (120, 120)
+
+GRAYDIST = 5
+LEFTGRAY,RIGHTGRAY = 100, 200

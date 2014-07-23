@@ -3,17 +3,40 @@ from subprocess import call
 
 from PIL import Image, ImageDraw
 
+from constants import MINSWIDTH,MINSHEIGHT,MAXSWIDTH,MAXSHEIGHT,MINBWIDTH,MINBHEIGHT,MAXBWIDTH,MAXBHEIGHT, GRAYDIST,LEFTGRAY,RIGHTGRAY
 from polygon import *
 MAKERS = {3:makeTri,4:makeQuad,5:makePent,6:makeHex,8:makeOct}
 
-#Min/max width & height of the screen
-(MINSWIDTH, MINSHEIGHT) = (400, 400)
-(MAXSWIDTH, MAXSHEIGHT) = (600, 600)
+def getRGB(c):
+    def getRange(token):
+        if '-' in token: return map(int, token.split('-'))
+        if int(token) < 128: return 0,int(token)
+        return int(token), 255
 
-#Our polygons must be flush against a Box
-#The Box's dimensions are bounded thusly
-(MINBWIDTH, MINBHEIGHT) = (100, 100)
-(MAXBWIDTH, MAXBHEIGHT) = (120, 120)
+    #Given a color (string), return a matching tuple of RGB values
+    if c == 'gray':
+        r = randint(LEFTGRAY,RIGHTGRAY)
+        g = randint(r-GRAYDIST,r+GRAYDIST)
+        b = randint(r-GRAYDIST,r+GRAYDIST)
+        return (r,g,b)
+
+    f = open('color/ranges')
+    lines = f.readlines()
+    f.close()
+    for line in lines:
+        if c in line:
+            #For each of (r,g,b), pick a random number within the given range
+            tokens = line.strip().split()[1:]
+            ans = []
+            for token in tokens:
+                left,right = getRange(token)
+                ans.append(randint(left,right))
+                pass
+            return tuple(ans)
+        pass
+
+    #should never get here
+    return (-1,-1,-1)
 
 def makeScene2(bgc, shapeDescList, fname):
     (swidth,sheight) = (randint(MINSWIDTH,MAXSWIDTH),
@@ -41,17 +64,13 @@ def makeScene2(bgc, shapeDescList, fname):
         (dx, dy) = ((xthird-polygon.width)/2,(ythird-polygon.height)/2)
         polygon.translate(x+dx,y+dy)
 
-        #print polygon.width, polygon.height, polygon.pts
-        draw.polygon(polygon.pts, c)
+        draw.polygon(polygon.pts, 'rgb'+str(getRGB(c)))
 
         shapeDescList[i] = (n, symm, base, c, polygon)
         pass
 
     #Save scene
     im.save(fname+'.png')
-
-    #Show scene
-    #call(["gnome-open",fname+'.png'])
 
     pass
 

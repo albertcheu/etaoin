@@ -172,17 +172,18 @@ def startGUI():
 
 def deleteProblemSet(ps):
     #rm -r that directory
+    original = ps
     call(['rm', '-r', 'problemSets/ps%d/'%ps])
 
     #rename subsequent directories, if any
     ps += 1
     dirname = 'ps%d'%ps
     while dirname in listdir('problemSets'):
-        call(['mv', 'problemSets'+dirname, 'problemSets/ps%d'%(ps-1)])
+        call(['mv', 'problemSets/'+dirname, 'problemSets/ps%d'%(ps-1)])
         ps += 1
         dirname = 'ps%d'%ps
         pass
-    return 'Deleted problem set %d.\nNote that subsequent problem sets have been renamed as well (if you delete ps3, ps4 is renamed ps3)'%ps
+    return 'Deleted problem set %d.\nNote that subsequent problem sets have been renamed as well (if you delete ps3, ps4 is renamed ps3)'%original
 
 def createProblemSet(ps):
     call(['mkdir', 'problemSets/ps%d'%ps])
