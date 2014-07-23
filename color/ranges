@@ -1,13 +1,13 @@
 red 230 14 80
-orange 
+orange 250 75-150 20
 yellow 235 215 50
 green 100 180 50
 blue 0 70 190
-violet 147-160 30 147
-pink 230
-cyan 
+violet 147-200 30 147
+pink 230 100 190
+cyan 20 230 210
 black 8 10 20
 white 230 230 230
-gray 
-brown
-tan
+gray
+brown 180-200 100-120 30
+tan 215-230 185-200 100-150
