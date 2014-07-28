@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from random import choice
 from os import listdir
 from subprocess import call
 
@@ -103,7 +102,7 @@ class SceneInput(wx.Frame):
     pass
 
 def creationGUI(fname):
-    #label = good1..6, bad1..6
+    #fname = good1..6, bad1..6
     app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
     si = SceneInput(None, size=(600,350), title=fname, style=styleSet)
@@ -121,14 +120,11 @@ Hello! This is Etaoin (or Etta Owen).
 This system finds sentences that are
 true for 6 images, false for another 6.
 The images are of simple polygons.
-A group of 12 images is a "problem set"
-
-You can view, make, delete, or analyze
-problem sets.
+Problem sets are groups of 12 images.
 
 The selection of problem set is
 irrelevant to 'make' but required
-when deleting or analyzing.
+for the other options.
 '''
 
         self.txt = wx.StaticText(panel,label=txt)
@@ -218,7 +214,7 @@ def startGUI():
     #What the user sees first
     app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    Start(None,size=(250,440),title='Etaoin, or Etta Owen',style=styleSet)
+    Start(None,size=(250,380),title='Etaoin, or Etta Owen',style=styleSet)
     app.MainLoop()
     pass
 
