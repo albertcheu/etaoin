@@ -48,8 +48,9 @@ def searchFirst(t, label): return searchTree(t,label)[0]
 def treeHas(tree, label): return len(searchTree(tree,label)) > 0
 
 def respond(output):
-    print "Etta:", str(output)
-    return
+    ans = "Etta: " + str(output)
+    print ans
+    return ans
 
 def colorHistogram(winnowed):
     hist = {}

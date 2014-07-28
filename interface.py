@@ -72,10 +72,16 @@ def interface(bgc, shapeDescList):
         #Work on the words
         words = q.split()
         ans, assertion = processWords(words, bgc, shapeDescList)
-        respond(ans)        
+        respond(ans)
         pass
     pass
 
+def interface2(bgc, shapeDescList, userInput):
+    q = userInput.strip("\n\t .?").lower()
+    if q.startswith("etta, "): q = q[6:]
+    words = q.split()
+    ans, assertion = processWords(words, bgc, shapeDescList)
+    return respond(ans)
 
 if __name__ == "__main__":
     fname = 'problemSets/'+sys.argv[1]+'.png'
