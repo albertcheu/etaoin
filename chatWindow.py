@@ -9,7 +9,9 @@ from interface import interface2
 class ChatWindow(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(ChatWindow,self).__init__(*args,**kwargs)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         pass
+    def onClose(self,eventThingy): exit(0)
     def start(self,fname):
         panel = wx.Panel(self)
 
@@ -53,6 +55,7 @@ class ChatWindow(wx.Frame):
 class SelectionWindow(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(SelectionWindow,self).__init__(*args,**kwargs)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
         txt = wx.StaticText(panel,label='Please select the image to chat about')
@@ -75,22 +78,23 @@ class SelectionWindow(wx.Frame):
         self.Centre()
         self.Show()
         pass
+    def onClose(self,eventThingy): exit(0)
     def setPS(self, ps): self.ps = ps
     def moveToChat(self, eventThingy):
         if len(self.cbox.GetValue().split()) > 1: return
         picked = self.cbox.GetValue()
         fname = 'problemSets/%s/%s.png' % (self.ps,picked)
-        self.Close()
+        #self.Close()
         styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
         cw = ChatWindow(None,size=(800,650),title='Chat Window',style=styleSet)
         cw.start(fname)
         pass
     pass
 
-if __name__ == '__main__':
-    app = wx.App(0)
+def startChat(ps):
+    app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
     sw = SelectionWindow(None,size=(280,90),
                          title='Selection Window',style=styleSet)
-    sw.setPS('ps1')    
+    sw.setPS('ps%d'%ps)    
     app.MainLoop()

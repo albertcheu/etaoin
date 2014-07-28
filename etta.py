@@ -7,6 +7,7 @@ import wx
 from constants import COLORS, DEFNS
 from analysis import analyzeProblemSet
 from makeScene import makeScene1
+from chatWindow import startChat
 
 sideOptions = map(str, sorted(DEFNS.keys()) )
 
@@ -130,6 +131,7 @@ for the other options.
         self.txt = wx.StaticText(panel,label=txt)
         self.view = wx.RadioButton(panel,label='View a problem set',
                                    style=wx.RB_GROUP)
+        self.chat = wx.RadioButton(panel,label='Chat about a problem set')
         self.make = wx.RadioButton(panel,label='Make a problem set')
         self.delete = wx.RadioButton(panel,label='Delete a problem set')
         self.analyze = wx.RadioButton(panel,label='Analyze a problem set')
@@ -139,7 +141,7 @@ for the other options.
         self.select.Bind(wx.EVT_BUTTON, self.nxt)
 
         szr = wx.BoxSizer(wx.VERTICAL)
-        szr.AddMany((self.txt,self.view,self.make,
+        szr.AddMany((self.txt,self.view,self.make, self.chat,
                      self.delete,self.analyze,self.fnames))
         szr.Add(self.select,flag=wx.ALIGN_RIGHT|wx.TOP|wx.RIGHT,border=10)
         panel.SetSizer(szr)
@@ -159,17 +161,19 @@ for the other options.
             ps = int(lastProblemSet)+1
             self.Close()
             createProblemSet(ps)
-            exit(0)
             pass
-        #View, Delete or analyze
+        #Chat, view, Delete or analyze
         elif fname in fnames:
+            self.Close()
             ps = int(fname[-1])
+            #View
             if self.view.GetValue():
                 call(['gnome-open', 'problemSets/ps%d/good1.png'%ps])
                 pass
+            #Chat
+            elif self.chat.GetValue(): startChat(ps)
+            #Delete or analyze
             else: alert(f(ps))
-            self.Close()
-            exit(0)
             pass
         else: alert('Please select a problem set')
         pass
@@ -214,7 +218,7 @@ def startGUI():
     #What the user sees first
     app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    Start(None,size=(250,380),title='Etaoin, or Etta Owen',style=styleSet)
+    Start(None,size=(250,400),title='Etaoin, or Etta Owen',style=styleSet)
     app.MainLoop()
     pass
 
