@@ -17,7 +17,14 @@ def drawLines(panel,flagSet,vsizer):
     vsizer.Add(wx.StaticLine(panel), flag=wx.EXPAND|flagSet, border=2)
     pass
 
+def alert(message): wx.MessageBox(message,'Alert!',wx.OK)
+
 class SceneInput(wx.Frame):
+    '''
+    GUI to input what is in a scene: two dropdown menus for each of 9 regions
+    (Color & no. of sides.)
+    One dropdown menu at top for background color
+    '''
     def __init__(self, *args, **kwargs):
         super(SceneInput, self).__init__(*args, **kwargs)
         panel = wx.Panel(self)
@@ -54,9 +61,11 @@ class SceneInput(wx.Frame):
         self.colorList, self.sideList = [],[]
         for r in regions:
             regionLabel = wx.StaticText(panel,label=r,style=wx.ALIGN_CENTRE)
-            colorChoice = wx.ComboBox(panel,value='Select color',choices=COLORS,style=wx.CB_READONLY)
+            colorChoice = wx.ComboBox(panel,value='Select color',
+                                      choices=COLORS,style=wx.CB_READONLY)
             self.colorList.append(colorChoice)
-            sideChoice = wx.ComboBox(panel,value='Select no. sides',choices=sideOptions,style=wx.CB_READONLY)
+            sideChoice = wx.ComboBox(panel,value='Select no. sides',
+                                     choices=sideOptions,style=wx.CB_READONLY)
             self.sideList.append(sideChoice)
 
             vsizer2 = wx.BoxSizer(wx.VERTICAL)
@@ -65,35 +74,40 @@ class SceneInput(wx.Frame):
             pass
         return gs
 
-    def saveLabel(self, label): self.label = label
+    def saveFilename(self, fname): self.fname = fname
 
     def submitForm(self, eventThing):
         bgc = str(self.bgcSelect.GetValue())
+        if bgc not in COLORS:
+            alert('Please choose a background color')
+            return
         shapeDescList = []
         for i in range(9):
             #uc = unicode color
             uc,n = self.colorList[i].GetValue(),self.sideList[i].GetValue()
             if uc in COLORS and n in sideOptions:
-                shapeDescList.append((str(uc), n, i))
+                c = str(uc)
+                if c == bgc:
+                    alert("A shape can't have the same color as the background")
+                    return
+                shapeDescList.append((c, n, i))
                 pass
             pass
-        if bgc in COLORS and len(shapeDescList) > 0:
-            f = open(self.label,'w')
-            f.write(bgc+'\n'+str(len(shapeDescList))+'\n')
-            for (c,n,i) in shapeDescList: f.write(c+'\n'+n+'\n'+str(i)+'\n')
-            f.close()
-            self.Close(True)
-            pass
-        pass
 
+        f = open(self.fname,'w')
+        f.write(bgc+'\n'+str(len(shapeDescList))+'\n')
+        for (c,n,i) in shapeDescList: f.write(c+'\n'+n+'\n'+str(i)+'\n')
+        f.close()
+        self.Close(True)
+        pass
     pass
 
-def creationGUI(label):
+def creationGUI(fname):
     #label = good1..6, bad1..6
     app = wx.App()
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    si = SceneInput(None, size=(600,350), title=label, style=styleSet)
-    si.saveLabel(label)
+    si = SceneInput(None, size=(600,350), title=fname, style=styleSet)
+    si.saveFilename(fname)
     app.MainLoop()
     pass
 
@@ -107,9 +121,10 @@ Hello! This is Etaoin (or Etta Owen).
 This system finds sentences that are
 true for 6 images, false for another 6.
 The images are of simple polygons.
-You can make new problem sets!
+A group of 12 images is a "problem set"
 
-Please choose one of the choices.
+You can view, make, delete, or analyze
+problem sets.
 
 The selection of problem set is
 irrelevant to 'make' but required
@@ -117,8 +132,9 @@ when deleting or analyzing.
 '''
 
         self.txt = wx.StaticText(panel,label=txt)
-        self.make = wx.RadioButton(panel,label='Make a problem set',
+        self.view = wx.RadioButton(panel,label='View a problem set',
                                    style=wx.RB_GROUP)
+        self.make = wx.RadioButton(panel,label='Make a problem set')
         self.delete = wx.RadioButton(panel,label='Delete a problem set')
         self.analyze = wx.RadioButton(panel,label='Analyze a problem set')
         self.fnames = wx.ComboBox(panel,choices=listdir('problemSets/'),
@@ -127,7 +143,8 @@ when deleting or analyzing.
         self.select.Bind(wx.EVT_BUTTON, self.nxt)
 
         szr = wx.BoxSizer(wx.VERTICAL)
-        szr.AddMany((self.txt,self.make,self.delete, self.analyze,self.fnames))
+        szr.AddMany((self.txt,self.view,self.make,
+                     self.delete,self.analyze,self.fnames))
         szr.Add(self.select,flag=wx.ALIGN_RIGHT|wx.TOP|wx.RIGHT,border=10)
         panel.SetSizer(szr)
 
@@ -138,8 +155,8 @@ when deleting or analyzing.
         fnames = listdir('problemSets/')
         fname = self.fnames.GetValue()
 
-        if self.delete.GetValue(): f,word = deleteProblemSet,'delete'
-        elif self.analyze.GetValue(): f,word = analyzeProblemSet,'analyze'
+        if self.delete.GetValue(): f = deleteProblemSet
+        elif self.analyze.GetValue(): f = analyzeProblemSet
         #Make a problem set
         if self.make.GetValue():
             lastProblemSet = fnames[-1][-1] if len(fnames) else '0'            
@@ -148,33 +165,24 @@ when deleting or analyzing.
             createProblemSet(ps)
             exit(0)
             pass
-        #Delete or analyze
-        if fname in fnames:
+        #View, Delete or analyze
+        elif fname in fnames:
             ps = int(fname[-1])
+            if self.view.GetValue():
+                call(['gnome-open', 'problemSets/ps%d/good1.png'%ps])
+                pass
+            else: alert(f(ps))
             self.Close()
-            message = f(ps)
-            wx.MessageBox(message,'Alert!',wx.OK)
             exit(0)
             pass
-        else: print 'Please select a problem set to',word
-
+        else: alert('Please select a problem set')
         pass
     pass
 
-def startGUI():
-    #What the user sees first
-    #Choose between making new problem set, deleting old one, or analyzing
-    app = wx.App()
-    styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    Start(None,size=(250,400),title='Etaoin, or Etta Owen',style=styleSet)
-    app.MainLoop()
-    pass
-
 def deleteProblemSet(ps):
-    #rm -r that directory
     original = ps
+    #remove that directory
     call(['rm', '-r', 'problemSets/ps%d/'%ps])
-
     #rename subsequent directories, if any
     ps += 1
     dirname = 'ps%d'%ps
@@ -198,11 +206,20 @@ def createProblemSet(ps):
         makeScene1(fname)
         pass
     files = listdir('problemSets/ps%d'%ps)
+
     if len(files) < 12:
-        print 'Oh, you skipped one'
+        alert('You skipped an image. The problem set will be deleted.')
         call(['rm', '-r', 'problemSets/ps%d'%ps])
         pass
-    call(['gnome-open', 'problemSets/ps%d/good1.png'%ps])
+    else: alert('Images for ps%d created'%ps)
+    pass
+
+def startGUI():
+    #What the user sees first
+    app = wx.App()
+    styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
+    Start(None,size=(250,440),title='Etaoin, or Etta Owen',style=styleSet)
+    app.MainLoop()
     pass
 
 if __name__ == '__main__':
