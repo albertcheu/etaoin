@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from os import listdir
+
 import wx
 
 from imageAnalysis import processImage
@@ -48,10 +50,47 @@ class ChatWindow(wx.Frame):
         pass
     pass
 
+class SelectionWindow(wx.Frame):
+    def __init__(self, *args, **kwargs):
+        super(SelectionWindow,self).__init__(*args,**kwargs)
+        panel = wx.Panel(self)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        txt = wx.StaticText(panel,label='Please select the image to chat about')
+        vbox.Add(txt)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        choices = []
+        for i in range(12):
+            if i < 6: choices.append('good%d'%(i+1))
+            else: choices.append('bad%d'%(i-5))
+            pass
+        self.cbox = wx.ComboBox(panel, value='Image within set',
+                                choices=choices, style=wx.CB_READONLY)
+        hbox.Add(self.cbox, flag=wx.ALIGN_LEFT|wx.EXPAND)
+        self.submit = wx.Button(panel,label='Submit')
+        self.submit.Bind(wx.EVT_BUTTON,self.moveToChat)
+        hbox.Add(self.submit,flag=wx.ALIGN_RIGHT)
+        vbox.Add(hbox,flag=wx.TOP,border=10)
+
+        panel.SetSizer(vbox)
+        self.Centre()
+        self.Show()
+        pass
+    def setPS(self, ps): self.ps = ps
+    def moveToChat(self, eventThingy):
+        if len(self.cbox.GetValue().split()) > 1: return
+        picked = self.cbox.GetValue()
+        fname = 'problemSets/%s/%s.png' % (self.ps,picked)
+        self.Close()
+        styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
+        cw = ChatWindow(None,size=(800,650),title='Chat Window',style=styleSet)
+        cw.start(fname)
+        pass
+    pass
+
 if __name__ == '__main__':
     app = wx.App(0)
     styleSet = wx.MINIMIZE_BOX|wx.CLOSE_BOX|wx.CLIP_CHILDREN|wx.CAPTION
-    cw = ChatWindow(None,size=(800,650),title='Chat Window',style=styleSet)
-    fname = 'problemSets/ps1/bad3.png'
-    cw.start(fname)
+    sw = SelectionWindow(None,size=(280,90),
+                         title='Selection Window',style=styleSet)
+    sw.setPS('ps1')    
     app.MainLoop()
