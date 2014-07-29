@@ -73,6 +73,9 @@ def satEnum(enumTree, winnowed, numSat):
     if enumTree.node=='ENUMSING' and enumWords == ['the']:
         return numSat == 1 and len(winnowed) == 1
 
+    #(exactly) one shape is green
+    elif enumWords == ['one']: return numSat == 1
+
     #Except for one/two/.., all X are Y
     #Find the no. of X (len(winnowed)), and the no. of X that are Y (numSat)
     elif 'except' in enumWords:
@@ -83,15 +86,13 @@ def satEnum(enumTree, winnowed, numSat):
 
     #the quadrilaterals (i.e. all quadrilaterals)
     #Should be a positive number of them
-    elif enumWords == ['the']: return numSat > 0 and numSat == len(winnowed)
+    elif enumWords == ['the']: return numSat > 1 and numSat == len(winnowed)
 
     #Not all
     elif 'not' in enumWords: return numSat != len(winnowed)
 
     #No X are Y; number of X that are Y is 0
     elif enumWords == ['no']: return numSat == 0
-
-    elif enumWords == ['one']: return numSat == 1
 
     #an X; positive number of X
     return numSat > 0

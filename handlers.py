@@ -155,14 +155,10 @@ def countTrue(winnowed, test):
 
 def checkThe(npsing, winnowed):
     if npsing.leaves()[0] == 'the':
-        if len(winnowed) > 1:
-            return(THEPROB)
-            return False
-        elif len(winnowed) == 0:
-            return(DNE)
-            return False
+        if len(winnowed) > 1: return THEPROB,False
+        elif len(winnowed) == 0: return DNE,False
         pass
-    return True
+    return True,True
 
 def handleBool(tree, words, shapeDescList, sing):
     if treeHas(tree, 'THING'):
@@ -177,15 +173,20 @@ def handleBool(tree, words, shapeDescList, sing):
         if sing: filtered = filterByNPSING(nphrase, shapeDescList,shapeDescList)
         else: filtered = filterByNPPLUR(nphrase, shapeDescList, shapeDescList)
 
+        #The triangle: there must be exactly one
+        if sing:
+            errorResult,okay = checkThe(nphrase, filtered)
+            if not okay: return errorResult
+            pass
+        #polygons: there must be more than one
+        elif not enumTree and len(filtered) < 2: return NO
+
         if 'does' in words or 'do' in words:
-            if sing and not checkThe(nphrase, filtered): return
             if 'sides' in words:
                 #does X have N sides?
                 snum = searchFirst(tree, 'NUM').leaves()[0]
                 matchSides = lambda sD: sD[N] == SNUM[snum]
                 numSat = countTrue(filtered,matchSides)
-                return(YES if satEnum(enumTree, filtered, numSat) else NO)
-                pass
             elif treeHas(tree, 'NP'):
                 #do(es) X have the same color as NP? (X -> filtered)
                 np = searchFirst(tree, 'NP')
@@ -195,22 +196,16 @@ def handleBool(tree, words, shapeDescList, sing):
                 if len(histList) > 1:
                     np_words = " ".join(np[0].leaves())
                     return(np_words+" don't have the same color to begin with")
-                    pass
-                else:
-                    col = histList[0]
-                    matchColor = lambda x: x[C] == col
-                    numSat = countTrue(filtered, matchColor)
-                    return(YES if satEnum(enumTree, filtered, numSat) else NO)
-                    pass
-                pass
+
+                col = histList[0]
+                matchColor = lambda x: x[C] == col
+                numSat = countTrue(filtered, matchColor)
             else:
                 #Do X have the same color (as each other)?
                 if len(filtered)==0: return NO
                 hist = colorHistogram(filtered)
                 col = hist.keys()[0]
                 numSat = countTrue(filtered, lambda sD: sD[C] == col)
-                return(YES if satEnum(enumTree, filtered, numSat) else NO)
-                pass
             pass
         elif 'there' in words:
             #Is/Are there X?
@@ -218,25 +213,23 @@ def handleBool(tree, words, shapeDescList, sing):
             if type(tree[0]) != str:
                 filtered = filterByPP(tree[0],filtered,shapeDescList)
                 pass
-            return(YES if satEnum(enumTree, filtered, len(filtered)) else NO)
+            numSat = len(filtered)
             pass
         elif tree[1].node == 'C':
             #Is/are X <color>?
             if sing and not checkThe(nphrase, filtered): return
             col = words[-1]
             numSat = countTrue(filtered, lambda sD:sD[C]==col)
-            return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif treeHas(tree, 'UNITE'):
             #Are X close to one another? (i.e. 5 X, all X)
             numSat = len(handleAdjacent(filtered))
-            return(YES if satEnum(enumTree, filtered, numSat) else NO)
             pass
         elif tree[-1].node == 'PP':
             #i.e. is X at the right? are Y below Z?
             newFiltered = filterByPP(tree[-1], filtered, shapeDescList)
             numSat = len(newFiltered)
-            return(YES if satEnum(enumTree, filtered, numSat) else NO)
+
             pass
         else:
             #Is/are X <instance(s) of Y>?
@@ -246,12 +239,14 @@ def handleBool(tree, words, shapeDescList, sing):
 
             pnphrase = searchFirst(tree, vnLabel)[-1]
             penumTree = searchFirst(pnphrase, enumLabel) if treeHas(pnphrase, enumLabel) else None
-            pfiltered = filterFunc(pnphrase, shapeDescList, shapeDescList)
-            numSat = len(filterFunc(nphrase, pfiltered, shapeDescList))
-            return(YES if satEnum(penumTree, pfiltered, numSat) else NO)
+
+            filtered = filterFunc(pnphrase, shapeDescList, shapeDescList)
+            numSat = len(filterFunc(nphrase, filtered, shapeDescList))
 
             pass
-        pass
+
+        return(YES if satEnum(enumTree, filtered, numSat) else NO)
+
     pass
 
 def handleQuestion(tree, words, shapeDescList):

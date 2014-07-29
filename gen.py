@@ -7,6 +7,7 @@ from nltk.tree import Tree
 
 from constants import N,C,POLY,REVDEFNS, COLORS
 from utility import adj, left, right, above, below, treeHas,searchFirst,satEnum
+from handlers import checkThe
 from filters import filterByCN, filterByPP, filterByNPSING, filterByNPPLUR
 
 def getGramDict(bgc, shapeDescList):
@@ -231,14 +232,27 @@ def pruneCombos(production, combos, shapeDescList):
         pass
     elif production in ('NPSING','NPPLUR'):
         newList = []
-        f = filterByNPSING if production == 'NPSING' else filterByNPPLUR
-        enumLabel = 'ENUMSING' if production == 'NPSING' else 'ENUMPLUR'
+        sing = production=='NPSING'
+        if sing: f,enumLabel=filterByNPSING,'ENUMSING'
+        else: f,enumLabel=filterByNPPLUR,'ENUMPLUR'
+
         for tree in combos[production]:
             if treeHas(tree,enumLabel): enumTree = searchFirst(tree,enumLabel)
             else: enumTree = None
             filtered = f(tree,shapeDescList,shapeDescList)
-            numSat = len(filtered)
-            if satEnum(enumTree, filtered, numSat): newList.append(tree)
+            #The triangle: there must be exactly one
+            if sing:
+                errorResult,okay = checkThe(tree, filtered)
+                if okay: newList.append(tree)
+                pass
+
+            #polygons: there must be more than one
+            elif not enumTree and len(filtered) > 1: newList.append(tree)
+
+            else:
+                numSat = len(filtered)
+                if satEnum(enumTree, filtered, numSat): newList.append(tree)
+                pass
             pass
         combos[production] = newList
         pass
